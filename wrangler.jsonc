@@ -1,0 +1,20 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "csv-to-seo-blog",
+  // Personal Cloudflare account, pinned so a deploy can never land on another account.
+  "account_id": "a61ac205751a881fce80b2ad4d3504bb",
+  "main": ".output/server/index.mjs",
+  "compatibility_date": "2025-07-15",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": ".output/public",
+    "binding": "ASSETS"
+  },
+  // Generated pages: one key per page (page:<slug>) plus an index key.
+  "kv_namespaces": [
+    { "binding": "PAGES", "id": "63c79dac16074f9b842831421859d054" }
+  ],
+  "observability": {
+    "enabled": true
+  }
+}
