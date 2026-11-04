@@ -105,7 +105,7 @@ onBeforeUnmount(() => clearInterval(timer))
 <template>
   <div class="container page">
     <header class="head">
-      <p class="eyebrow">Generate a report</p>
+      <p class="kicker">Generate a report</p>
       <h1>Upload a company dataset</h1>
       <p class="lead muted">
         Any CSV with one company per row works. Column names don't need to match anything; the app works them out
@@ -210,9 +210,9 @@ onBeforeUnmount(() => clearInterval(timer))
 .drop {
   display: grid; place-items: center; gap: 8px; text-align: center;
   min-height: 220px; padding: 32px; cursor: pointer;
-  border: 2px dashed var(--line); border-radius: var(--radius); background: var(--surface);
+  border: 2px dashed var(--line); border-radius: var(--radius); background: var(--panel);
 }
-.drop:hover, .drop.dragging, .drop:focus-within { border-color: var(--accent); background: var(--accent-soft); }
+.drop:hover, .drop.dragging, .drop:focus-within { border-color: var(--accent); background: #f1f0fb; }
 .drop-title { font-weight: 600; font-size: var(--step-1); }
 
 .review { display: grid; gap: 24px; }

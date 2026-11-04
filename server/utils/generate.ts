@@ -7,7 +7,7 @@ import { analyseCsv } from '#shared/csv'
 import { buildDataset } from '#shared/csv/normalise'
 import { fallbackCopy, pageTitle, type Subject } from '#shared/copy'
 import type { PageRecord } from '#shared/page'
-import { slugify } from '#shared/format'
+import { metricLabel, slugify } from '#shared/format'
 import { computeStats, factsFrom } from '#shared/stats'
 import { industryFromFilename, writeCopy } from './ai'
 import { freeSlug, getPage, savePage, takeDailyGeneration } from './store'
@@ -64,7 +64,7 @@ export async function generatePage(event: H3Event, input: GenerateInput): Promis
   const mapping = resolveMapping(csv.headers, input.mapping, match.mapping)
   const data = buildDataset(csv, profiles, mapping)
   const stats = computeStats(data)
-  const subject = subjectFor(input, data.columns.amount ?? 'Funding', stats.stages)
+  const subject = subjectFor(input, metricLabel(data.columns.amount ?? 'Funding'), stats.stages)
   const content = await contentFor(event, subject, { data, stats })
 
   const title = pageTitle(subject, data.companies.length)
@@ -89,7 +89,7 @@ export async function generatePage(event: H3Event, input: GenerateInput): Promis
 export async function regeneratePage(event: H3Event, slug: string): Promise<PageRecord> {
   const page = await getPage(slug)
   if (!page) throw createError({ statusCode: 404, statusMessage: 'Page not found.' })
-  const subject = { ...page.subject, year: new Date().getFullYear() }
+  const subject = { ...page.subject, metric: metricLabel(page.subject.metric), year: new Date().getFullYear() }
   const stats = computeStats(page.data)
   const content = await contentFor(event, subject, { data: page.data, stats })
   const updated: PageRecord = { ...page, subject, stats, content, updatedAt: new Date().toISOString() }

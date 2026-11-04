@@ -51,13 +51,13 @@ export const COPY_SCHEMA = {
 
 export const SYSTEM_PROMPT = `You write data-led blog copy for a UK company-intelligence publisher.
 Rules:
-- British English. Plain, factual and specific. No hype words (revolutionary, game-changing, thriving, robust, landscape, delve, unlock, cutting-edge, ecosystem).
+- British English. Plain, factual and specific. No hype words (revolutionary, game-changing, thriving, robust, landscape, delve, unlock, cutting-edge, ecosystem, empower, unleash, transform, supercharge, leverage, seamless, elevate).
 - Use ONLY the numbers given in FACTS, written exactly as they appear there. Do not calculate, round differently, estimate or add any other number, year or percentage.
 - Keep each number attached to what its fact says it measures. Never reuse a figure to describe something else.
 - Describe what the data shows, not why. No claims about investor sentiment, demand, momentum or causes. The outlook says what to watch, framed as open questions the data raises.
 - Do not name any company that is not in the TOP COMPANIES list. Do not invent investors, products, events or trends.
 - Mention the industry and location naturally for search, but never stuff keywords.
-- Plain text only: no markdown, no HTML, no emojis.`
+- Plain text only: no markdown, no HTML, no emojis. Never use an em dash or en dash; use a comma, a full stop or a plain hyphen.`
 
 export function buildPrompt(subject: Subject, facts: Fact[], data: Dataset): string {
   const top = data.companies.slice(0, 10).map((c) => {
@@ -131,6 +131,7 @@ export function checkCopy(copy: PageCopy, facts: Fact[], data: Dataset, extra: n
       if (!fine) problems.push(`"${token.text}" is not one of the given figures`)
     }
     if (/[*#<>`]|\]\(/.test(raw)) problems.push('contains markdown or HTML')
+    if (/[–—]/.test(raw)) problems.push('contains an en or em dash')
   }
 
   const meta = copy.metaDescription.length

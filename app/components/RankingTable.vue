@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import type { Company, Currency, Dataset } from '#shared/types'
-import { compactMoney, fullMoney } from '#shared/format'
+import { fullMoney } from '#shared/format'
 
-// The full ranking. Sorting uses links (?sort=amount&order=asc), so it works
-// without JavaScript and every sort order is still server-rendered.
+// The full ranking, laid out like Beauhurst's own tables. Sorting uses links
+// (?sort=amount&order=asc), so it works without JavaScript and stays server-rendered.
 const props = defineProps<{
   companies: Company[]
   has: Dataset['has']
@@ -22,9 +22,9 @@ const showStage = computed(() => props.has.stage && new Set(props.companies.map(
 
 const columns = computed(() =>
   ([
-    { key: 'rank', label: 'Rank', show: true },
+    { key: 'rank', label: '', show: true },
     { key: 'name', label: 'Company', show: true },
-    { key: 'region', label: 'Location', show: props.has.region },
+    { key: 'region', label: 'Region', show: props.has.region },
     { key: 'stage', label: 'Stage', show: showStage.value },
     { key: 'size', label: 'Employees', show: props.has.size },
     { key: 'founded', label: 'Founded', show: props.has.founded },
@@ -64,13 +64,12 @@ const host = (url: string) => url.replace(/^https?:\/\/(www\.)?/, '').replace(/\
 <template>
   <div class="scroller" tabindex="0" role="region" :aria-label="caption">
     <table>
-      <caption class="visually-hidden">{{ caption }}. Column headers sort the table.</caption>
+      <caption class="visually-hidden">{{ caption }}. Column headings sort the table.</caption>
       <thead>
         <tr>
           <th v-for="col in columns" :key="col.key" scope="col" :aria-sort="ariaSort(col.key)" :class="col.key">
             <NuxtLink :to="linkFor(col.key)" rel="nofollow" :class="{ active: sort === col.key }">
-              {{ col.label }}
-              <span aria-hidden="true" class="arrow">{{ sort === col.key ? (order === 'asc' ? '↑' : '↓') : '↕' }}</span>
+              <span v-if="col.key === 'rank'" class="visually-hidden">Rank</span>{{ col.label }}<span v-if="sort === col.key && col.key !== 'rank'" aria-hidden="true" class="arrow">{{ order === 'asc' ? ' ↑' : ' ↓' }}</span>
             </NuxtLink>
           </th>
         </tr>
@@ -79,21 +78,14 @@ const host = (url: string) => url.replace(/^https?:\/\/(www\.)?/, '').replace(/\
         <tr v-for="c in rows" :key="c.rank + c.name">
           <td class="rank num">{{ c.rank }}</td>
           <th scope="row" class="name">
-            <a v-if="c.website" :href="c.website" rel="nofollow noopener" target="_blank">{{ c.name }}<span class="visually-hidden"> (opens {{ host(c.website) }} in a new tab)</span></a>
-            <span v-else>{{ c.name }}</span>
-            <span v-if="c.description" class="desc">{{ c.description }}</span>
+            <a v-if="c.website" :href="c.website" rel="nofollow noopener" target="_blank" :title="c.description ?? undefined">{{ c.name }}<span class="visually-hidden"> (opens {{ host(c.website) }} in a new tab)</span></a>
+            <span v-else :title="c.description ?? undefined">{{ c.name }}</span>
           </th>
-          <td v-if="has.region">{{ c.region ?? '–' }}</td>
-          <td v-if="showStage">{{ c.stage ?? '–' }}</td>
-          <td v-if="has.size" class="num">{{ c.size?.label ?? '–' }}</td>
-          <td v-if="has.founded" class="num">{{ c.founded ?? '–' }}</td>
-          <td v-if="has.amount" class="amount num">
-            <template v-if="c.amount !== null">
-              <span class="compact">{{ compactMoney(c.amount, currency) }}</span>
-              <span class="full">{{ fullMoney(c.amount, currency) }}</span>
-            </template>
-            <span v-else>–</span>
-          </td>
+          <td v-if="has.region">{{ c.region ?? '-' }}</td>
+          <td v-if="showStage">{{ c.stage ?? '-' }}</td>
+          <td v-if="has.size" class="num">{{ c.size?.label ?? '-' }}</td>
+          <td v-if="has.founded" class="num">{{ c.founded ?? '-' }}</td>
+          <td v-if="has.amount" class="amount num">{{ c.amount !== null ? fullMoney(c.amount, currency) : '-' }}</td>
         </tr>
       </tbody>
     </table>
@@ -101,26 +93,19 @@ const host = (url: string) => url.replace(/^https?:\/\/(www\.)?/, '').replace(/\
 </template>
 
 <style scoped>
-.scroller { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); }
-table { width: 100%; border-collapse: collapse; font-size: var(--step--1); min-width: 640px; }
-th, td { padding: 12px 14px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
-tbody tr:last-child > * { border-bottom: 0; }
-thead th { position: sticky; top: 0; background: var(--surface); font-weight: 600; white-space: nowrap; z-index: 1; }
-thead a { color: var(--muted); text-decoration: none; display: inline-flex; gap: 4px; }
-thead a.active, thead a:hover { color: var(--ink); }
-.arrow { color: var(--faint); }
-a.active .arrow { color: var(--accent); }
-tbody tr:hover > * { background: var(--surface); }
+.scroller { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: var(--step--1); min-width: 600px; color: var(--text); }
+th, td { padding: 11px 14px; text-align: left; border-bottom: 1px solid var(--line); }
+thead th { font-weight: 500; white-space: nowrap; border-bottom: 1px solid var(--line); }
+thead a { color: var(--text); text-decoration: none; }
+thead a:hover, thead a.active { color: var(--ink); text-decoration: underline; }
+.arrow { color: var(--accent); }
 
-/* Keep rank and company visible while the rest scrolls sideways on a phone. */
-.rank { width: 3.5rem; color: var(--muted); position: sticky; left: 0; background: var(--bg); }
-.name { position: sticky; left: 3.5rem; background: var(--bg); font-weight: 600; min-width: 220px; max-width: 360px; }
-thead .rank, thead .name { background: var(--surface); z-index: 2; }
-.name a { color: var(--ink); }
-.name a:hover { color: var(--accent); }
-.desc { display: block; font-weight: 400; color: var(--muted); margin-top: 4px; line-height: 1.45; }
-.amount { text-align: right; white-space: nowrap; }
-thead .amount { text-align: right; }
-.compact { font-weight: 600; display: block; }
-.full { color: var(--faint); font-size: 0.8rem; }
+.rank { width: 3rem; text-align: center; color: var(--text); position: sticky; left: 0; background: var(--bg); }
+.name { position: sticky; left: 3rem; background: var(--bg); font-weight: 700; color: var(--ink); min-width: 180px; }
+.name a { color: var(--ink); text-decoration: none; }
+.name a:hover { color: var(--accent); text-decoration: underline; }
+.amount, thead .amount { text-align: right; white-space: nowrap; }
+.amount { font-weight: 700; color: var(--ink); }
+tbody tr:hover > * { background: #f7f7fa; }
 </style>

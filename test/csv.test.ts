@@ -24,6 +24,7 @@ describe('cell values', () => {
     expect(parseBand('>1000')).toEqual({ label: '>1000', min: 1000, max: null })
     expect(parseBand('1,000+')).toEqual({ label: '1,000+', min: 1000, max: null })
     expect(parseBand('872')).toEqual({ label: '872', min: 872, max: 872 })
+    expect(parseBand('10–24')).toEqual({ label: '10-24', min: 10, max: 24 })
   })
 
   it('tidies shouted or lower-case labels only', () => {

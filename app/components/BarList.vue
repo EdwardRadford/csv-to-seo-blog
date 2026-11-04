@@ -35,13 +35,13 @@ const max = computed(() => Math.max(1, ...shown.value.map((i) => i.value)))
 </template>
 
 <style scoped>
-.chart { margin: 0; padding: 24px; border: 1px solid var(--line); border-radius: var(--radius); }
+.chart { margin: 0; padding: 24px; border: 1px solid var(--line); font-family: var(--sans); }
 figcaption { font-weight: 600; margin-bottom: 16px; }
 .bars { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
 li { display: grid; grid-template-columns: minmax(96px, 42%) 1fr auto; align-items: center; gap: 12px; font-size: var(--step--1); }
 .label { overflow-wrap: anywhere; line-height: 1.3; }
-.track { height: 10px; background: var(--surface); border-radius: 999px; overflow: hidden; }
-.fill { display: block; height: 100%; background: var(--accent); border-radius: 999px; min-width: 3px; }
+.track { height: 10px; background: var(--panel); overflow: hidden; }
+.fill { display: block; height: 100%; background: var(--accent); min-width: 3px; }
 li:not(.top) .fill { opacity: 0.5; }
 .value { font-weight: 600; min-width: 3ch; text-align: right; }
 .more { margin-top: 12px; }

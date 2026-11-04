@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { datasetFromCsv } from '#shared/csv'
-import { compactMoney, slugify } from '#shared/format'
+import { compactMoney, metricLabel, slugify } from '#shared/format'
 import { computeStats, factsFrom } from '#shared/stats'
 
 const sample = (name: string) => readFileSync(new URL(`../samples/${name}`, import.meta.url), 'utf8')
@@ -14,6 +14,12 @@ describe('formatting', () => {
     expect(compactMoney(30_314_247, 'GBP')).toBe('£30.3m')
     expect(compactMoney(2_000_000, 'USD')).toBe('$2m')
     expect(compactMoney(250_000, 'EUR')).toBe('€250k')
+  })
+
+  it('tidies column headers into readable labels', () => {
+    expect(metricLabel('total_funding_usd')).toBe('Total funding')
+    expect(metricLabel('Amount Raised (GBP)')).toBe('Amount raised')
+    expect(metricLabel('Total Raised')).toBe('Total raised')
   })
 
   it('makes clean slugs', () => {

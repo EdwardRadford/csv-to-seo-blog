@@ -43,10 +43,12 @@ export function parseBand(text: string): SizeBand | null {
   if (!match) return null
   const [, comparison, low, high, plus] = match
   const a = Number(low!.replace(/,/g, ''))
-  if (comparison?.startsWith('<')) return { label: trimmed, min: 0, max: a }
-  if (comparison?.startsWith('>') || plus) return { label: trimmed, min: a, max: null }
-  if (high) return { label: trimmed, min: a, max: Number(high.replace(/,/g, '')) }
-  return { label: trimmed, min: a, max: a }
+  // Labels are shown on the page, so en dashes in the data become plain hyphens ("10-24").
+  const label = trimmed.replace(/\s*[–—]\s*/g, '-')
+  if (comparison?.startsWith('<')) return { label, min: 0, max: a }
+  if (comparison?.startsWith('>') || plus) return { label, min: a, max: null }
+  if (high) return { label, min: a, max: Number(high.replace(/,/g, '')) }
+  return { label, min: a, max: a }
 }
 
 export const isBandLike = (text: string) => /[-–+<>]|\bto\b/.test(text) && parseBand(text) !== null

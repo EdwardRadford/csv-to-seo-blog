@@ -1,7 +1,7 @@
 // Structured data (JSON-LD) for a report page: what search engines read to
 // understand it as an article, where it sits in the site, and the ranked list.
 import type { PageRecord } from '#shared/page'
-import { fullMoney } from '#shared/format'
+import { fullMoney, metricLabel } from '#shared/format'
 
 export function reportJsonLd(page: PageRecord, url: string, siteUrl: string, siteName: string) {
   const { companies, currency } = page.data
@@ -48,7 +48,7 @@ export function reportJsonLd(page: PageRecord, url: string, siteUrl: string, sit
             ...(c.size && c.size.max !== null && { numberOfEmployees: { '@type': 'QuantitativeValue', minValue: c.size.min, maxValue: c.size.max } }),
             additionalProperty: [
               ...(c.stage ? [{ '@type': 'PropertyValue', name: 'Stage', value: c.stage }] : []),
-              ...(c.amount !== null ? [{ '@type': 'PropertyValue', name: page.subject.metric, value: fullMoney(c.amount, currency) }] : [])
+              ...(c.amount !== null ? [{ '@type': 'PropertyValue', name: metricLabel(page.subject.metric), value: fullMoney(c.amount, currency) }] : [])
             ]
           }
         }))

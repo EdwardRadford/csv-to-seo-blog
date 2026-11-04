@@ -60,6 +60,12 @@ describe('copy checker', () => {
     expect(result.problems.join(' ')).toMatch(/45%/)
   })
 
+  it('rejects en and em dashes', () => {
+    const copy = goodCopy()
+    copy.intro = 'London leads — by a distance.'
+    expect(checkCopy(copy, facts, data).problems).toContain('contains an en or em dash')
+  })
+
   it('rejects markdown', () => {
     const copy = goodCopy()
     copy.intro = '**Bold** claims'

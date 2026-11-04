@@ -20,6 +20,19 @@ export const percent = (share: number) => `${Math.round(share * 100)}%`
 
 export const count = (value: number) => value.toLocaleString('en-GB')
 
+/** A column header as readers should see it: "total_funding_usd" becomes "Total funding", "Amount Raised (GBP)" becomes "Amount raised". */
+export function metricLabel(header: string): string {
+  const clean = header
+    .replace(/\(.*?\)/g, ' ')
+    .replace(/[_-]+/g, ' ')
+    .replace(/\b(gbp|usd|eur)\b/gi, ' ')
+    .replace(/[£$€]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase()
+  return clean ? clean.charAt(0).toUpperCase() + clean.slice(1) : 'Funding'
+}
+
 /** "top-100-seed-fintech-companies-uk" from any title-like text. */
 export function slugify(text: string): string {
   return text

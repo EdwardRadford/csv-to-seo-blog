@@ -13,7 +13,18 @@ export function isProtected(slug: string): boolean {
 const INDEX = 'index'
 
 export async function listPages(): Promise<PageSummary[]> {
-  return (await storage().getItem<PageSummary[]>(INDEX)) ?? []
+  const pages = (await storage().getItem<PageSummary[]>(INDEX)) ?? []
+  // Index entries written before the summary gained new fields are rebuilt once from their page.
+  if (pages.some((p) => !Array.isArray(p.curve))) {
+    const rebuilt = await Promise.all(pages.map(async (p) => {
+      if (Array.isArray(p.curve)) return p
+      const page = await getPage(p.slug)
+      return page ? summarise(page) : p
+    }))
+    await storage().setItem(INDEX, rebuilt)
+    return rebuilt
+  }
+  return pages
 }
 
 export async function getPage(slug: string): Promise<PageRecord | null> {

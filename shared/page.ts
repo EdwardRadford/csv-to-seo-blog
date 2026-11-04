@@ -38,6 +38,10 @@ export interface PageSummary {
   createdAt: string
   updatedAt: string
   noindex: boolean
+  total: number | null
+  currency: Dataset['currency']
+  /** Amounts in rank order, scaled 0 to 1, for the little funding curve on index cards. */
+  curve: number[]
 }
 
 export const summarise = (page: PageRecord): PageSummary => ({
@@ -47,5 +51,13 @@ export const summarise = (page: PageRecord): PageSummary => ({
   companies: page.data.companies.length,
   createdAt: page.createdAt,
   updatedAt: page.updatedAt,
-  noindex: page.noindex
+  noindex: page.noindex,
+  total: page.stats.total,
+  currency: page.data.currency,
+  curve: curveOf(page.data.companies.map((c) => c.amount ?? 0))
 })
+
+function curveOf(amounts: number[]): number[] {
+  const max = Math.max(1, ...amounts)
+  return amounts.slice(0, 40).map((a) => Math.round((a / max) * 100) / 100)
+}

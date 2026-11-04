@@ -32,7 +32,7 @@ const bars = computed(() =>
 </template>
 
 <style scoped>
-.chart { margin: 0; padding: 24px; border: 1px solid var(--line); border-radius: var(--radius); }
+.chart { margin: 0; padding: 24px; border: 1px solid var(--line); font-family: var(--sans); }
 figcaption { font-weight: 600; margin-bottom: 4px; }
 .callout { color: var(--muted); margin-bottom: 16px; font-size: var(--step--1); }
 .callout strong { color: var(--accent); font-size: var(--step-1); }
