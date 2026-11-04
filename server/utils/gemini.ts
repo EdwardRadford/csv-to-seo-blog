@@ -1,9 +1,11 @@
 // A small Gemini client: JSON-only answers, a timeout, and a second model to
 // fall back to when the first is busy or out of free-tier quota.
 
-// The main model gets a second try after a short pause (503s are usually brief),
-// then a different model. If all three fail, the caller uses template copy.
-export const MODELS = ['gemini-3.5-flash', 'gemini-3.5-flash', 'gemini-flash-lite-latest'] as const
+// Tried in order. The free tier gives each model its own small daily allowance
+// (20 requests a day for gemini-3.5-flash), so a chain of models multiplies the headroom.
+// A busy (503) model gets one more try after a short pause; a model that is out of
+// quota (429) is skipped straight away. If every model fails, the caller uses template copy.
+export const MODELS = ['gemini-3.5-flash', 'gemini-3-flash-preview', 'gemini-3.1-flash-lite', 'gemini-flash-lite-latest'] as const
 
 export type GeminiFailure = 'no_key' | 'rate_limited' | 'busy' | 'timeout' | 'bad_response' | 'error'
 
@@ -34,15 +36,19 @@ export async function generateJson<T>({ apiKey, system, prompt, schema, timeoutM
   if (!apiKey) throw new GeminiError('no_key', 'No Gemini API key is configured.')
   let lastError: GeminiError | null = null
 
-  for (const [attempt, model] of models.entries()) {
-    if (attempt > 0) await new Promise((resolve) => setTimeout(resolve, 1500))
-    try {
-      const data = await callModel<T>(model, { apiKey, system, prompt, schema, timeoutMs, thinking })
-      return { data, model }
-    } catch (error) {
-      lastError = error instanceof GeminiError ? error : new GeminiError('error', String(error))
-      // Only a busy or rate-limited model is worth retrying on the other model.
-      if (!['rate_limited', 'busy', 'timeout'].includes(lastError.reason)) throw lastError
+  for (const model of models) {
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      try {
+        const data = await callModel<T>(model, { apiKey, system, prompt, schema, timeoutMs, thinking })
+        return { data, model }
+      } catch (error) {
+        lastError = error instanceof GeminiError ? error : new GeminiError('error', String(error))
+        // A broken request (bad key, bad schema) will fail on every model, so stop.
+        if (!['rate_limited', 'busy', 'timeout'].includes(lastError.reason)) throw lastError
+        // Busy: pause and try this model once more. Out of quota or slow: move to the next model.
+        if (lastError.reason !== 'busy' || attempt === 2) break
+        await new Promise((resolve) => setTimeout(resolve, 1500))
+      }
     }
   }
   throw lastError!

@@ -32,6 +32,7 @@ export default defineEventHandler(async (event) => {
     source: improved.match.source,
     industry: improved.industry ?? industryFromFilename(body.filename),
     aiUsed: improved.aiUsed,
+    aiNote: improved.aiError ?? null,
     warnings: [...csv.warnings, ...(preview?.warnings ?? [])],
     preview: preview?.companies.slice(0, 5) ?? []
   }

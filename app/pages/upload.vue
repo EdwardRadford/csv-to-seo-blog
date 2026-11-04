@@ -138,7 +138,7 @@ onBeforeUnmount(() => clearInterval(timer))
     </section>
 
     <!-- Step 2 -->
-    <section v-else-if="analysis" aria-labelledby="review-heading" class="review">
+    <section v-else-if="analysis && step === 'review'" aria-labelledby="review-heading" class="review">
       <div class="file-line">
         <h2 id="review-heading">{{ analysis.filename }}</h2>
         <span class="muted small">{{ analysis.rows }} rows · {{ analysis.columns.length }} columns</span>
