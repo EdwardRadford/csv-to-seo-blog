@@ -143,7 +143,8 @@ export function factsFrom(stats: Stats, labels: { metric: string }): Fact[] {
   if (stats.stages.length === 1) push('stage_all', `All ${count(stats.stages[0]!.count)} companies with a known stage are at ${stats.stages[0]!.label} stage.`)
   else if (stats.stages[0]) push('stage_top', `${stats.stages[0].label} is the most common stage, with ${count(stats.stages[0].count)} companies.`)
 
-  const commonSize = [...stats.sizes].sort((a, b) => b.count - a.count)[0]
+  // "Most common size" only means something for bands ("10-24"), not exact headcounts.
+  const commonSize = stats.amountBySize.length ? [...stats.sizes].sort((a, b) => b.count - a.count)[0] : undefined
   if (commonSize) push('size_common', `The most common team size is ${commonSize.label} employees (${count(commonSize.count)} companies).`)
   const biggestBand = [...stats.amountBySize].sort((a, b) => b.mean - a.mean)[0]
   if (biggestBand) push('size_amount', `Companies with ${biggestBand.label} employees have the highest average, at ${money(biggestBand.mean)}.`)
