@@ -1,9 +1,6 @@
 <template>
-  <div>
+  <NuxtLayout>
     <NuxtRouteAnnouncer />
-    <main>
-      <h1>CSV to SEO blog</h1>
-      <p>Setting up. The generator is on its way.</p>
-    </main>
-  </div>
+    <NuxtPage />
+  </NuxtLayout>
 </template>
