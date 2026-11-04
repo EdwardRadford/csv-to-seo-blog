@@ -1,0 +1,51 @@
+Position,Company Name,Location,Funding Stage,Headcount,Amount Raised (GBP),About,URL,Sectors
+1,MossWorks,East of England,Seed,5-9,179139581,MossWorks develops genomics technology for the NHS and private clinics.,https://www.mossworks.co.uk,Genomics
+2,Pulseio,North East,Growth,5-9,172118447,Pulseio develops telehealth technology for the NHS and private clinics.,https://www.pulseio.co.uk,"Telehealth, Mental health"
+3,IrisSense,East Midlands,Established,1-4,147274545,IrisSense develops clinical software technology for the NHS and private clinics.,https://www.irissense.co.uk,"Clinical software, Telehealth"
+4,Vergeio,Yorkshire and the Humber,Established,10-24,130024663,Vergeio develops medical devices technology for the NHS and private clinics.,https://www.vergeio.co.uk,Medical devices
+5,ClearLoop,North West,Growth,500-999,129086196,ClearLoop develops mental health technology for the NHS and private clinics.,https://www.clearloop.co.uk,"Mental health, Drug discovery"
+6,LumenPath,East of England,Venture,100-249,112882711,LumenPath develops digital health technology for the NHS and private clinics.,https://www.lumenpath.co.uk,"Digital health, Diagnostics"
+7,VergeBio,East Midlands,Venture,500-999,108648277,VergeBio develops clinical software technology for the NHS and private clinics.,https://www.vergebio.co.uk,"Clinical software, Genomics, Mental health"
+8,PikeGrid,South West,Established,10-24,96534691,PikeGrid develops clinical software technology for the NHS and private clinics.,https://www.pikegrid.co.uk,"Clinical software, Wearables"
+9,Vergely,London,Venture,500-999,91837519,Vergely develops clinical software technology for the NHS and private clinics.,https://www.vergely.co.uk,"Clinical software, Diagnostics"
+10,Kinly,North West,Venture,500-999,84586889,Kinly develops clinical software technology for the NHS and private clinics.,https://www.kinly.co.uk,"Clinical software, Wearables, Genomics"
+11,ValeBio,Wales,Venture,50-99,75637457,ValeBio develops medical devices technology for the NHS and private clinics.,https://www.valebio.co.uk,"Medical devices, Clinical software"
+12,Quillly,London,Seed,50-99,69346093,Quillly develops mental health technology for the NHS and private clinics.,https://www.quillly.co.uk,Mental health
+13,IrisWorks,East Midlands,Established,5-9,69290211,IrisWorks develops telehealth technology for the NHS and private clinics.,https://www.irisworks.co.uk,"Telehealth, Mental health, Medical devices"
+14,Solio,London,Seed,500-999,63497612,Solio develops drug discovery technology for the NHS and private clinics.,https://www.solio.co.uk,Drug discovery
+15,Thornio,East Midlands,Established,1-4,57048378,Thornio develops telehealth technology for the NHS and private clinics.,https://www.thornio.co.uk,"Telehealth, Diagnostics"
+16,ValeSense,Wales,Venture,250-499,49622045,ValeSense develops clinical software technology for the NHS and private clinics.,https://www.valesense.co.uk,"Clinical software, Telehealth, Wearables"
+17,NovaLabs,North East,Venture,10-24,43786588,NovaLabs develops mental health technology for the NHS and private clinics.,https://www.novalabs.co.uk,"Mental health, Genomics, Medical devices"
+18,WrenStack,East Midlands,Established,25-49,42659691,WrenStack develops medical devices technology for the NHS and private clinics.,https://www.wrenstack.co.uk,"Medical devices, Drug discovery"
+19,OrbitWave,Wales,Established,5-9,37376813,OrbitWave develops telehealth technology for the NHS and private clinics.,https://www.orbitwave.co.uk,"Telehealth, Mental health"
+20,ThornStack,South East,Venture,5-9,35810174,ThornStack develops medical devices technology for the NHS and private clinics.,https://www.thornstack.co.uk,"Medical devices, Telehealth, Digital health"
+21,ThornGrid,South East,Venture,250-499,34569382,ThornGrid develops drug discovery technology for the NHS and private clinics.,https://www.thorngrid.co.uk,Drug discovery
+22,VergeLoop,Yorkshire and the Humber,Venture,25-49,29654924,VergeLoop develops genomics technology for the NHS and private clinics.,https://www.vergeloop.co.uk,"Genomics, Clinical software, Wearables"
+23,TideSense,North West,Seed,50-99,28929895,TideSense develops mental health technology for the NHS and private clinics.,https://www.tidesense.co.uk,Mental health
+24,Fernly,South West,Venture,500-999,24779321,Fernly develops digital health technology for the NHS and private clinics.,https://www.fernly.co.uk,"Digital health, Mental health"
+25,FernLoop,Northern Ireland,Seed,1-4,23987851,FernLoop develops clinical software technology for the NHS and private clinics.,https://www.fernloop.co.uk,Clinical software
+26,OpalSense,Wales,Seed,50-99,22930294,OpalSense develops mental health technology for the NHS and private clinics.,https://www.opalsense.co.uk,Mental health
+27,PikeSense,North East,Growth,250-499,20779519,PikeSense develops digital health technology for the NHS and private clinics.,https://www.pikesense.co.uk,Digital health
+28,RookHealth,Yorkshire and the Humber,Seed,10-24,19082198,RookHealth develops telehealth technology for the NHS and private clinics.,https://www.rookhealth.co.uk,Telehealth
+29,NovaBase,West Midlands,Venture,50-99,18905512,NovaBase develops genomics technology for the NHS and private clinics.,https://www.novabase.co.uk,"Genomics, Telehealth"
+30,VergeMind,Scotland,Growth,25-49,16888974,VergeMind develops digital health technology for the NHS and private clinics.,https://www.vergemind.co.uk,Digital health
+31,JunoBase,Scotland,Venture,250-499,14131455,JunoBase develops medical devices technology for the NHS and private clinics.,https://www.junobase.co.uk,"Medical devices, Drug discovery, Diagnostics"
+32,LumenWorks,London,Venture,5-9,12908127,LumenWorks develops digital health technology for the NHS and private clinics.,https://www.lumenworks.co.uk,"Digital health, Telehealth"
+33,PikeBio,West Midlands,Seed,500-999,12424703,PikeBio develops medical devices technology for the NHS and private clinics.,https://www.pikebio.co.uk,"Medical devices, Drug discovery"
+34,ArcLabs,London,Seed,1-4,12395948,ArcLabs develops drug discovery technology for the NHS and private clinics.,https://www.arclabs.co.uk,"Drug discovery, Digital health, Diagnostics"
+35,FernAI,North East,Venture,5-9,10529359,FernAI develops digital health technology for the NHS and private clinics.,https://www.fernai.co.uk,Digital health
+36,KinPath,London,Seed,1-4,8739712,KinPath develops genomics technology for the NHS and private clinics.,https://www.kinpath.co.uk,Genomics
+37,BrightLoop,Yorkshire and the Humber,Venture,25-49,8570187,BrightLoop develops digital health technology for the NHS and private clinics.,https://www.brightloop.co.uk,Digital health
+38,Rookly,London,Venture,1-4,8075793,Rookly develops genomics technology for the NHS and private clinics.,https://www.rookly.co.uk,"Genomics, Medical devices"
+39,VitaPath,Scotland,Venture,25-49,7762046,VitaPath develops wearables technology for the NHS and private clinics.,https://www.vitapath.co.uk,"Wearables, Telehealth, Clinical software"
+40,BrightHealth,West Midlands,Growth,25-49,6374257,BrightHealth develops mental health technology for the NHS and private clinics.,https://www.brighthealth.co.uk,Mental health
+41,NovaSense,Wales,Venture,1-4,6155374,NovaSense develops genomics technology for the NHS and private clinics.,https://www.novasense.co.uk,Genomics
+42,ThornMind,North West,Venture,5-9,6022426,ThornMind develops clinical software technology for the NHS and private clinics.,https://www.thornmind.co.uk,"Clinical software, Genomics"
+43,YewPath,London,Venture,500-999,5250784,YewPath develops drug discovery technology for the NHS and private clinics.,https://www.yewpath.co.uk,"Drug discovery, Medical devices"
+44,ValeLoop,East Midlands,Venture,1-4,4663181,ValeLoop develops wearables technology for the NHS and private clinics.,https://www.valeloop.co.uk,"Wearables, Genomics"
+45,UmberLoop,West Midlands,Seed,10-24,4282296,UmberLoop develops clinical software technology for the NHS and private clinics.,https://www.umberloop.co.uk,Clinical software
+46,KinBio,London,Venture,10-24,4021182,KinBio develops mental health technology for the NHS and private clinics.,https://www.kinbio.co.uk,"Mental health, Telehealth, Drug discovery"
+47,Lumenly,North East,Venture,5-9,3576920,Lumenly develops digital health technology for the NHS and private clinics.,https://www.lumenly.co.uk,"Digital health, Clinical software"
+48,QuillStack,East of England,Venture,100-249,3501046,QuillStack develops digital health technology for the NHS and private clinics.,https://www.quillstack.co.uk,Digital health
+49,SableBase,North East,Venture,100-249,3452187,SableBase develops drug discovery technology for the NHS and private clinics.,https://www.sablebase.co.uk,"Drug discovery, Mental health, Medical devices"
+50,ZealBase,West Midlands,Established,25-49,2990774,ZealBase develops genomics technology for the NHS and private clinics.,https://www.zealbase.co.uk,"Genomics, Wearables"

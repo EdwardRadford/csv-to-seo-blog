@@ -1,0 +1,81 @@
+name,country,stage,employees,total_funding_usd,founded,website,tags
+BrightWorks,Spain,seed,872,$204.2m,2021,brightworks.eu,Carbon capture | EV charging
+ThornWorks,Germany,venture,904,$828.8m,2018,thornworks.eu,Battery storage | Grid software
+VitaWorks,Denmark,seed,813,$812.7m,2013,vitaworks.eu,Battery storage | Hydrogen
+BrightBase,France,seed,631,$215.8m,2011,brightbase.eu,Solar
+Zeally,Germany,venture,405,$308.5m,2012,zeally.eu,Solar
+QuillMind,Finland,established,152,$565.9m,2012,quillmind.eu,Carbon capture
+ArcSense,Sweden,venture,108,$229.5m,2010,arcsense.eu,Battery storage | EV charging | Hydrogen
+SableSense,Norway,seed,39,$277.6m,2014,sablesense.eu,Grid software | Battery storage | Carbon capture
+Pikeio,Finland,seed,569,$411.3m,2019,pikeio.eu,Recycling | Carbon capture
+TideLoop,Netherlands,venture,251,$1.54b,2022,tideloop.eu,Recycling
+ValeStack,Netherlands,venture,183,$1.20b,2023,valestack.eu,Battery storage | Hydrogen | Grid software
+VergeLabs,Norway,venture,263,$1.12b,2021,vergelabs.eu,Solar
+Brightio,Finland,established,681,$14.9m,2008,brightio.eu,Heat pumps | Battery storage
+NimbusStack,Spain,growth,175,$440.7m,2013,nimbusstack.eu,Hydrogen | EV charging | Heat pumps
+ArcWave,Finland,venture,770,$45.0m,2008,arcwave.eu,Solar
+QuillBio,Germany,established,101,$112.4m,2022,quillbio.eu,Grid software
+RookAI,Denmark,growth,697,$99.1m,2021,rookai.eu,Carbon capture
+FernStack,Germany,established,515,$500.7m,2008,fernstack.eu,Carbon capture | Recycling | Grid software
+OpalBio,Finland,growth,180,$1.6m,2021,opalbio.eu,Carbon capture
+HavenMind,Finland,venture,5,$6.4m,2011,havenmind.eu,Recycling
+ClearWorks,Netherlands,growth,289,$2.0m,2017,clearworks.eu,Battery storage
+PulseGrid,Denmark,venture,775,$680.0m,2023,pulsegrid.eu,EV charging | Recycling | Hydrogen
+UmberSense,Finland,seed,686,$42.6m,2014,umbersense.eu,EV charging | Carbon capture
+Havenio,United Kingdom,venture,396,$15.3m,2015,havenio.eu,Recycling | Carbon capture
+SolMind,Sweden,growth,321,$3.7m,2018,solmind.eu,Battery storage | Solar | Carbon capture
+YewHealth,France,venture,464,$48.4m,2009,yewhealth.eu,Grid software | Solar | Battery storage
+ThornLoop,Denmark,seed,871,$132.1m,2020,thornloop.eu,Heat pumps
+TideHealth,Germany,established,417,$10.0m,2024,tidehealth.eu,Heat pumps | Hydrogen
+HavenWorks,Denmark,established,562,$1.9m,2014,havenworks.eu,EV charging | Carbon capture
+ThornSense,Ireland,established,101,$61.7m,2020,thornsense.eu,Heat pumps | Recycling
+VergeBase,United Kingdom,seed,593,$12.2m,2009,vergebase.eu,Carbon capture
+ZealWave,Denmark,established,18,$1.11b,2008,zealwave.eu,Recycling | Grid software
+IrisMind,Denmark,growth,774,$34.9m,2009,irismind.eu,Recycling
+NimbusSense,Finland,venture,649,$24.5m,2013,nimbussense.eu,Grid software | Hydrogen | Carbon capture
+PulseLoop,United Kingdom,growth,871,$20.3m,2010,pulseloop.eu,Grid software | EV charging
+NovaLoop,France,seed,711,$1.00b,2017,novaloop.eu,Grid software | Heat pumps
+OpalBase,Netherlands,growth,626,$292.5m,2014,opalbase.eu,Battery storage | Carbon capture | Grid software
+IrisBio,United Kingdom,seed,843,$71.8m,2010,irisbio.eu,Carbon capture | Heat pumps | EV charging
+VitaWave,Spain,growth,612,$28.0m,2016,vitawave.eu,EV charging | Recycling
+KinSense,France,seed,485,$16.7m,2015,kinsense.eu,Carbon capture | Solar | Recycling
+KinAI,France,venture,185,$6.1m,2009,kinai.eu,Recycling | Heat pumps | Grid software
+PulseBio,Sweden,venture,550,$946.8m,2013,pulsebio.eu,Recycling
+Mossly,Ireland,seed,268,$3.0m,2013,mossly.eu,Carbon capture | Battery storage
+SolHealth,Ireland,growth,602,$30.6m,2012,solhealth.eu,Battery storage
+PikeMind,Norway,seed,531,$9.1m,2010,pikemind.eu,Grid software | Battery storage
+ZealWorks,Spain,seed,551,$1.4m,2011,zealworks.eu,Heat pumps | EV charging | Solar
+Novaly,Sweden,seed,304,$4.6m,2009,novaly.eu,Hydrogen | Battery storage
+BrightBio,Netherlands,growth,131,$144.9m,2017,brightbio.eu,Battery storage | Hydrogen
+QuillSense,France,seed,7,$153.4m,2021,quillsense.eu,Recycling
+NimbusLabs,Germany,venture,366,$16.6m,2015,nimbuslabs.eu,EV charging
+SableMind,Denmark,growth,643,$40.1m,2011,sablemind.eu,Heat pumps | Hydrogen
+SolWave,United Kingdom,seed,454,$496.7m,2024,solwave.eu,Heat pumps
+Opalio,United Kingdom,venture,15,$104.3m,2019,opalio.eu,EV charging
+ValeMind,Spain,growth,58,$26.5m,2013,valemind.eu,Solar | Heat pumps
+ValeHealth,Denmark,venture,651,$79.1m,2013,valehealth.eu,Battery storage | Recycling
+ValeBase,Netherlands,venture,307,$9.8m,2018,valebase.eu,EV charging | Carbon capture
+Brightly,France,seed,7,$64.5m,2020,brightly.eu,Hydrogen | Carbon capture
+ZealMind,Ireland,venture,292,$5.8m,2008,zealmind.eu,Heat pumps | Hydrogen | Recycling
+OrbitPath,Ireland,seed,670,$687.9m,2022,orbitpath.eu,Battery storage
+Nimbusly,Finland,venture,618,$4.8m,2021,nimbusly.eu,Carbon capture | Recycling
+IrisGrid,Netherlands,venture,25,$9.3m,2008,irisgrid.eu,Hydrogen
+UmberPath,United Kingdom,venture,30,$95.7m,2012,umberpath.eu,Recycling
+Pikely,Denmark,venture,149,$23.9m,2010,pikely.eu,EV charging | Recycling
+JunoGrid,Sweden,seed,692,$3.5m,2022,junogrid.eu,Recycling
+Rookio,United Kingdom,seed,707,$81.6m,2014,rookio.eu,Battery storage
+NimbusGrid,Sweden,seed,541,$7.4m,2014,nimbusgrid.eu,Grid software | Solar
+MossHealth,Sweden,venture,615,$415.8m,2009,mosshealth.eu,Battery storage | Heat pumps
+TorchPath,Finland,seed,461,$7.8m,2008,torchpath.eu,Battery storage
+YewWave,France,growth,542,$1.6m,2012,yewwave.eu,Recycling
+UmberAI,France,seed,270,$46.1m,2009,umberai.eu,Grid software | Hydrogen | Carbon capture
+HavenSense,United Kingdom,venture,682,$163.0m,2018,havensense.eu,Solar | Grid software
+YewMind,Sweden,venture,859,$2.5m,2021,yewmind.eu,EV charging
+Solly,Finland,venture,278,$206.5m,2016,solly.eu,Heat pumps
+ZealPath,Denmark,seed,599,$3.0m,2020,zealpath.eu,Heat pumps | Battery storage
+QuillHealth,Finland,seed,565,$4.7m,2012,quillhealth.eu,Hydrogen | Heat pumps
+Yewly,United Kingdom,established,643,$342.6m,2020,yewly.eu,Recycling | Carbon capture
+KinLoop,Germany,venture,674,$12.1m,2020,kinloop.eu,Solar | Carbon capture
+Torchio,France,established,295,$2.5m,2016,torchio.eu,Solar
+Umberly,Finland,venture,442,$3.6m,2013,umberly.eu,Carbon capture | EV charging | Recycling
+ClearWave,Norway,venture,252,$67.0m,2018,clearwave.eu,Hydrogen
