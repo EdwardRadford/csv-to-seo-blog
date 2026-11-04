@@ -84,5 +84,6 @@ describe('template copy and title', () => {
   it('title follows the Beauhurst formula', () => {
     expect(pageTitle(subject, 100)).toBe('Top 100 Seed-Stage Fintech Companies in the UK | 2026')
     expect(pageTitle({ ...subject, geography: 'Europe', qualifier: null, industry: 'cleantech' }, 80)).toBe('Top 80 Cleantech Companies in Europe | 2026')
+    expect(pageTitle({ ...subject, qualifier: null, industry: 'ai' }, 30)).toBe('Top 30 AI Companies in the UK | 2026')
   })
 })

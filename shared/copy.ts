@@ -191,9 +191,11 @@ const clip = (text: string, max: number) => (text.length <= max ? text : `${text
 
 /** Fixed title formula, matching how Beauhurst titles its own lists. */
 export function pageTitle(subject: Subject, companies: number): string {
-  const scope = [subject.qualifier, subject.industry].filter(Boolean).map(titleCase).join(' ')
+  const scope = [subject.qualifier, subject.industry].filter((part): part is string => Boolean(part)).map(titleCase).join(' ')
   return `Top ${companies} ${scope} Companies in ${titleCasePlace(place(subject.geography))} | ${subject.year}`
 }
 
-const titleCase = (text: string) => text.replace(/(^|[\s-])(\p{Ll})/gu, (_, a, b) => a + b.toUpperCase())
+const ACRONYMS = new Set(['ai', 'iot', 'ml', 'vr', 'ar', 'saas', 'b2b', 'b2c', 'esg', 'uk', 'eu', 'us'])
+const titleCase = (text: string) =>
+  text.replace(/[\p{L}\d]+/gu, (word) => (ACRONYMS.has(word.toLowerCase()) ? word.toUpperCase() : word.charAt(0).toUpperCase() + word.slice(1)))
 const titleCasePlace = (text: string) => text.replace(/^the /, 'the ')

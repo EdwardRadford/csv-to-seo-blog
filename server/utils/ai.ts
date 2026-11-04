@@ -62,7 +62,8 @@ ${profiles.map(describe).join('\n')}`
       system: 'You label the columns of CSV files. Answer only from the evidence given.',
       prompt,
       schema: MAPPING_SCHEMA,
-      timeoutMs: 20_000
+      timeoutMs: 12_000,
+      thinking: 'minimal'
     })
     const mapping: Mapping = { ...rules.mapping }
     const source = { ...rules.source }
@@ -110,7 +111,7 @@ export async function writeCopy(apiKey: string, subject: Subject, stats: Stats, 
 
   for (let attempt = 1; attempt <= 2; attempt++) {
     try {
-      const { data: raw, model } = await generateJson<PageCopy>({ apiKey, system: SYSTEM_PROMPT, prompt, schema: COPY_SCHEMA })
+      const { data: raw, model } = await generateJson<PageCopy>({ apiKey, system: SYSTEM_PROMPT, prompt, schema: COPY_SCHEMA, timeoutMs: 40_000, thinking: 'low' })
       const copy = tidy(raw, data.has.region)
       const check = checkCopy(copy, facts, data, [subject.year])
       if (check.ok) return { copy, source: 'ai', model, notes }

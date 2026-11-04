@@ -1,7 +1,9 @@
 // A small Gemini client: JSON-only answers, a timeout, and a second model to
 // fall back to when the first is busy or out of free-tier quota.
 
-export const MODELS = ['gemini-3.5-flash', 'gemini-3.5-flash-lite'] as const
+// The main model gets a second try after a short pause (503s are usually brief),
+// then a different model. If all three fail, the caller uses template copy.
+export const MODELS = ['gemini-3.5-flash', 'gemini-3.5-flash', 'gemini-flash-lite-latest'] as const
 
 export type GeminiFailure = 'no_key' | 'rate_limited' | 'busy' | 'timeout' | 'bad_response' | 'error'
 
@@ -17,6 +19,8 @@ interface Request {
   prompt: string
   schema: object
   timeoutMs?: number
+  /** How much the model reasons before answering. More is slower but better. */
+  thinking?: 'minimal' | 'low' | 'medium'
 }
 
 export interface GeminiResult<T> {
@@ -24,13 +28,14 @@ export interface GeminiResult<T> {
   model: string
 }
 
-export async function generateJson<T>({ apiKey, system, prompt, schema, timeoutMs = 30_000 }: Request): Promise<GeminiResult<T>> {
+export async function generateJson<T>({ apiKey, system, prompt, schema, timeoutMs = 30_000, thinking = 'low' }: Request): Promise<GeminiResult<T>> {
   if (!apiKey) throw new GeminiError('no_key', 'No Gemini API key is configured.')
   let lastError: GeminiError | null = null
 
-  for (const model of MODELS) {
+  for (const [attempt, model] of MODELS.entries()) {
+    if (attempt > 0) await new Promise((resolve) => setTimeout(resolve, 1500))
     try {
-      const data = await callModel<T>(model, { apiKey, system, prompt, schema, timeoutMs })
+      const data = await callModel<T>(model, { apiKey, system, prompt, schema, timeoutMs, thinking })
       return { data, model }
     } catch (error) {
       lastError = error instanceof GeminiError ? error : new GeminiError('error', String(error))
@@ -41,7 +46,7 @@ export async function generateJson<T>({ apiKey, system, prompt, schema, timeoutM
   throw lastError!
 }
 
-async function callModel<T>(model: string, { apiKey, system, prompt, schema, timeoutMs }: Required<Request>): Promise<T> {
+async function callModel<T>(model: string, { apiKey, system, prompt, schema, timeoutMs, thinking }: Required<Request>): Promise<T> {
   let response: Response
   try {
     response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
@@ -54,7 +59,8 @@ async function callModel<T>(model: string, { apiKey, system, prompt, schema, tim
         generationConfig: {
           responseMimeType: 'application/json',
           responseJsonSchema: schema,
-          temperature: 0.4
+          temperature: 0.4,
+          thinkingConfig: { thinkingLevel: thinking }
         }
       })
     })
