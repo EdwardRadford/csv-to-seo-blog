@@ -9,7 +9,14 @@ const route = useRoute()
 const slug = String(route.params.slug)
 const { siteUrl, siteName } = useRuntimeConfig().public
 
-const { data: page, error } = await useFetch<PageRecord & { protected: boolean }>(`/api/pages/${slug}`)
+// Descriptions and tags are already summarised in the stats and copy, so they are left
+// out of the page data. That keeps the hydration payload, and so mobile load time, smaller.
+const { data: page, error } = await useFetch<PageRecord & { protected: boolean }>(`/api/pages/${slug}`, {
+  transform: (record) => ({
+    ...record,
+    data: { ...record.data, companies: record.data.companies.map((c) => ({ ...c, description: null, tags: [] })) }
+  })
+})
 if (error.value || !page.value) {
   throw createError({ statusCode: 404, statusMessage: 'Report not found', fatal: true })
 }
