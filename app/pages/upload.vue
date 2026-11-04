@@ -155,7 +155,7 @@ onBeforeUnmount(() => clearInterval(timer))
           <label>
             Industry
             <input v-model="industry" required maxlength="40" placeholder="e.g. healthtech">
-            <span class="hint small muted">{{ analysis.aiUsed ? 'Suggested by AI from the file.' : 'Guessed from the file name.' }} Used in the title and copy.</span>
+            <span class="hint small muted">{{ analysis.aiUsed ? 'Suggested by AI from the file.' : 'Taken from the file name.' }} Used in the title and copy.</span>
           </label>
           <label>
             Location

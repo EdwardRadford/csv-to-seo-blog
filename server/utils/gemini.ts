@@ -21,6 +21,8 @@ interface Request {
   timeoutMs?: number
   /** How much the model reasons before answering. More is slower but better. */
   thinking?: 'minimal' | 'low' | 'medium'
+  /** Override the model list, e.g. a single quick attempt. */
+  models?: readonly string[]
 }
 
 export interface GeminiResult<T> {
@@ -28,11 +30,11 @@ export interface GeminiResult<T> {
   model: string
 }
 
-export async function generateJson<T>({ apiKey, system, prompt, schema, timeoutMs = 30_000, thinking = 'low' }: Request): Promise<GeminiResult<T>> {
+export async function generateJson<T>({ apiKey, system, prompt, schema, timeoutMs = 30_000, thinking = 'low', models = MODELS }: Request): Promise<GeminiResult<T>> {
   if (!apiKey) throw new GeminiError('no_key', 'No Gemini API key is configured.')
   let lastError: GeminiError | null = null
 
-  for (const [attempt, model] of MODELS.entries()) {
+  for (const [attempt, model] of models.entries()) {
     if (attempt > 0) await new Promise((resolve) => setTimeout(resolve, 1500))
     try {
       const data = await callModel<T>(model, { apiKey, system, prompt, schema, timeoutMs, thinking })
@@ -46,7 +48,7 @@ export async function generateJson<T>({ apiKey, system, prompt, schema, timeoutM
   throw lastError!
 }
 
-async function callModel<T>(model: string, { apiKey, system, prompt, schema, timeoutMs, thinking }: Required<Request>): Promise<T> {
+async function callModel<T>(model: string, { apiKey, system, prompt, schema, timeoutMs, thinking }: Omit<Required<Request>, 'models'>): Promise<T> {
   let response: Response
   try {
     response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {

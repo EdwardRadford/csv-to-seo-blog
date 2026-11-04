@@ -77,6 +77,7 @@ h1 { max-width: 20ch; margin-top: 12px; }
 .lead { font-size: var(--step-1); line-height: 1.5; max-width: 58ch; margin-top: 20px; color: var(--muted); }
 .cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; }
 .body { display: grid; gap: 56px; padding-top: 48px; }
+.body > * { min-width: 0; }
 h2 { margin-bottom: 20px; }
 .cards { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 16px; }
 .card { display: grid; gap: 8px; padding: 20px; height: 100%; border: 1px solid var(--line); border-radius: var(--radius); text-decoration: none; color: var(--ink); }

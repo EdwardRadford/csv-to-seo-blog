@@ -257,6 +257,8 @@ h1 { max-width: 22ch; }
 .figures dd { margin: 6px 0 0; font-size: var(--step-2); font-weight: 700; letter-spacing: -0.02em; }
 
 .body { display: grid; gap: 56px; padding-top: 56px; }
+/* Grid items default to min-width: auto, which lets the wide table push the page past a phone's width. */
+.body > *, .ranking > * { min-width: 0; }
 .prose h2 { margin-bottom: 4px; }
 .findings { padding-left: 1.2em; display: grid; gap: 10px; margin: 0; }
 .findings li::marker { color: var(--accent); }

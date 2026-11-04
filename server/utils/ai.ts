@@ -43,6 +43,10 @@ export interface MappingResult {
  * with a column whose type suits that role.
  */
 export async function improveMapping(apiKey: string, profiles: ColumnProfile[], rules: RoleMatch, filename: string): Promise<MappingResult> {
+  // Nothing to ask: every column is placed and the file name gives the industry. Skip the wait.
+  const fromName = industryFromFilename(filename)
+  if (rules.unmatched.length === 0 && fromName) return { match: rules, industry: fromName, aiUsed: false }
+
   const missing = ROLES.filter((role) => rules.mapping[role] === null)
   const describe = (p: ColumnProfile) => `- "${p.header}" (${p.type}; e.g. ${p.examples.map((e) => JSON.stringify(e.slice(0, 60))).join(', ')})`
   const prompt = `A company dataset was uploaded as "${filename}".
@@ -62,8 +66,10 @@ ${profiles.map(describe).join('\n')}`
       system: 'You label the columns of CSV files. Answer only from the evidence given.',
       prompt,
       schema: MAPPING_SCHEMA,
-      timeoutMs: 12_000,
-      thinking: 'minimal'
+      // The user is waiting on this step, so one quick attempt; the rules already stand on their own.
+      timeoutMs: 8_000,
+      thinking: 'minimal',
+      models: ['gemini-3.5-flash']
     })
     const mapping: Mapping = { ...rules.mapping }
     const source = { ...rules.source }
