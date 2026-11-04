@@ -25,6 +25,8 @@ interface Request {
   thinking?: 'minimal' | 'low' | 'medium'
   /** Override the model list, e.g. a single quick attempt. */
   models?: readonly string[]
+  /** Give up on the whole chain at this time (ms since epoch), however many models are left. */
+  deadline?: number
 }
 
 export interface GeminiResult<T> {
@@ -32,14 +34,16 @@ export interface GeminiResult<T> {
   model: string
 }
 
-export async function generateJson<T>({ apiKey, system, prompt, schema, timeoutMs = 30_000, thinking = 'low', models = MODELS }: Request): Promise<GeminiResult<T>> {
+export async function generateJson<T>({ apiKey, system, prompt, schema, timeoutMs = 30_000, thinking = 'low', models = MODELS, deadline = Infinity }: Request): Promise<GeminiResult<T>> {
   if (!apiKey) throw new GeminiError('no_key', 'No Gemini API key is configured.')
   let lastError: GeminiError | null = null
 
   for (const model of models) {
     for (let attempt = 1; attempt <= 2; attempt++) {
+      const left = deadline - Date.now()
+      if (left < 2_000) throw lastError ?? new GeminiError('timeout', 'Out of time before trying every model.')
       try {
-        const data = await callModel<T>(model, { apiKey, system, prompt, schema, timeoutMs, thinking })
+        const data = await callModel<T>(model, { apiKey, system, prompt, schema, timeoutMs: Math.min(timeoutMs, left), thinking })
         return { data, model }
       } catch (error) {
         lastError = error instanceof GeminiError ? error : new GeminiError('error', String(error))
@@ -54,7 +58,7 @@ export async function generateJson<T>({ apiKey, system, prompt, schema, timeoutM
   throw lastError!
 }
 
-async function callModel<T>(model: string, { apiKey, system, prompt, schema, timeoutMs, thinking }: Omit<Required<Request>, 'models'>): Promise<T> {
+async function callModel<T>(model: string, { apiKey, system, prompt, schema, timeoutMs, thinking }: Omit<Required<Request>, 'models' | 'deadline'>): Promise<T> {
   let response: Response
   try {
     response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {

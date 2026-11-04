@@ -5,11 +5,11 @@ const { siteName } = useRuntimeConfig().public
 <template>
   <div class="shell">
     <a class="skip-link" href="#main">Skip to content</a>
-    <p class="strip small">
-      Every page here is generated from an uploaded CSV.
-      <NuxtLink to="/upload">Make one from your own data</NuxtLink>
-    </p>
     <header class="site-header">
+      <p class="strip small">
+        Every page here is generated from an uploaded CSV.
+        <NuxtLink to="/upload">Make one from your own data</NuxtLink>
+      </p>
       <div class="container bar">
         <NuxtLink to="/" class="brand">
           <svg width="18" height="18" viewBox="0 0 22 22" aria-hidden="true">
@@ -34,7 +34,7 @@ const { siteName } = useRuntimeConfig().public
 
     <footer class="site-footer">
       <div class="container foot">
-        <div>
+        <div id="about">
           <p class="foot-brand">{{ siteName }}</p>
           <p class="small">
             Rankings generated from company datasets. Every figure is calculated in code from the uploaded file;
@@ -77,7 +77,11 @@ main { flex: 1; outline: none; }
 .nav { display: flex; gap: 24px; flex: 1; flex-wrap: wrap; }
 .nav a { color: #fff; text-decoration: none; font-weight: 600; font-size: var(--step--1); }
 .nav a:hover { color: var(--yellow); }
-@media (max-width: 640px) { .nav { display: none; } .bar { justify-content: space-between; } }
+/* On phones the links wrap onto their own row instead of disappearing. */
+@media (max-width: 640px) {
+  .bar { justify-content: space-between; gap: 12px 16px; }
+  .nav { order: 3; flex-basis: 100%; gap: 18px; }
+}
 
 .site-footer { background: var(--night); color: rgba(255, 255, 255, 0.75); margin-top: 120px; }
 .foot { display: grid; gap: 32px; padding-block: 56px 32px; }

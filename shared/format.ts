@@ -30,8 +30,18 @@ export function metricLabel(header: string): string {
     .replace(/\s+/g, ' ')
     .trim()
     .toLowerCase()
-  return clean ? clean.charAt(0).toUpperCase() + clean.slice(1) : 'Funding'
+  // A bare verb or noun reads badly in a sentence ("ranked by raised"), so give it a noun phrase.
+  const bare: Record<string, string> = { raised: 'amount raised', funding: 'total funding', amount: 'amount raised', funds: 'total funding', investment: 'total investment' }
+  const label = bare[clean] ?? clean
+  return label ? label.charAt(0).toUpperCase() + label.slice(1) : 'Funding'
 }
+
+/** "1 company", "3 companies". */
+export const plural = (n: number, one: string, many: string) => `${n.toLocaleString('en-GB')} ${n === 1 ? one : many}`
+
+const ACRONYMS = new Set(['ai', 'iot', 'ml', 'vr', 'ar', 'saas', 'b2b', 'b2c', 'esg', 'uk', 'eu', 'us', 'usa'])
+/** Industry words as they read in a sentence: "fintech" stays lower case, "ai" becomes "AI". */
+export const sentenceCase = (text: string) => text.replace(/[\p{L}\d]+/gu, (w) => (ACRONYMS.has(w.toLowerCase()) ? w.toUpperCase() : w))
 
 /** "top-100-seed-fintech-companies-uk" from any title-like text. */
 export function slugify(text: string): string {

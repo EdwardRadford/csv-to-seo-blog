@@ -12,6 +12,8 @@ export interface PageRecord {
   createdAt: string
   updatedAt: string
   noindex: boolean
+  /** Random secret returned only to the uploader; needed to delete or regenerate. Never sent to readers. */
+  editToken?: string
   source: {
     filename: string
     rows: number

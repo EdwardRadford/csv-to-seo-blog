@@ -1,5 +1,7 @@
 import type { ColumnProfile, Company, Currency, Dataset, Mapping, ParsedCsv, Role } from '../types'
 import { ROLES } from '../types'
+import { CsvError } from './parse'
+import { plural } from '../format'
 import { headerMultiplier } from './profile'
 import { isMissing, isPlainNumber, isYear, normaliseUrl, parseBand, parseMoney, splitList, tidyLabel } from './values'
 
@@ -9,7 +11,7 @@ import { isMissing, isPlainNumber, isYear, normaliseUrl, parseBand, parseMoney, 
  * never the raw CSV, so a new column layout only has to be handled here.
  */
 export function buildDataset(csv: ParsedCsv, profiles: ColumnProfile[], mapping: Mapping): Dataset {
-  if (mapping.name === null) throw new Error('No company name column was found.')
+  if (mapping.name === null) throw new CsvError('No company name column was found.')
   const warnings = [...csv.warnings]
   const cell = (row: string[], role: Role) => {
     const index = mapping[role]
@@ -59,9 +61,9 @@ export function buildDataset(csv: ParsedCsv, profiles: ColumnProfile[], mapping:
       founded: foundedText && isYear(foundedText) ? Number(foundedText) : null
     })
   }
-  if (records.length === 0) throw new Error('No rows had a company name.')
-  if (duplicates) warnings.push(`${duplicates} duplicate company row(s) were removed.`)
-  if (missingAmounts) warnings.push(`${missingAmounts} company(s) had no usable amount and are ranked last.`)
+  if (records.length === 0) throw new CsvError('No rows had a company name.')
+  if (duplicates) warnings.push(`${plural(duplicates, 'duplicate company row was', 'duplicate company rows were')} removed.`)
+  if (missingAmounts) warnings.push(`${plural(missingAmounts, 'company has', 'companies have')} no usable amount and ${missingAmounts === 1 ? 'is' : 'are'} ranked last.`)
 
   // Use the file's own ranking when every row has one; otherwise rank by amount, highest first.
   const rankedByAmount = mapping.rank === null || records.some((r) => r.sourceRank === null)

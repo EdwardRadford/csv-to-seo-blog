@@ -5,7 +5,7 @@ import { ROLES } from '#shared/types'
 import { improveMapping, industryFromFilename } from '../utils/ai'
 
 export default defineEventHandler(async (event) => {
-  await rateLimit(event)
+  await rateLimit(event, 'analyse')
   const body = await readCsvBody(event)
 
   let analysis
@@ -31,8 +31,10 @@ export default defineEventHandler(async (event) => {
     mapping: Object.fromEntries(ROLES.map((role) => [role, improved.match.mapping[role] === null ? null : csv.headers[improved.match.mapping[role]!]])),
     source: improved.match.source,
     industry: improved.industry ?? industryFromFilename(body.filename),
+    geography: improved.geography,
     aiUsed: improved.aiUsed,
-    aiNote: improved.aiError ?? null,
+    // Only the reason (e.g. "rate_limited"), never the upstream error text.
+    aiNote: improved.aiError?.split(':')[0] ?? null,
     warnings: [...csv.warnings, ...(preview?.warnings ?? [])],
     preview: preview?.companies.slice(0, 5) ?? []
   }

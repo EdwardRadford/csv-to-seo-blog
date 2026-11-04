@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { analyseCsv, datasetFromCsv } from '#shared/csv'
 import { headerMultiplier } from '#shared/csv/profile'
 import { metricLabel } from '#shared/format'
+import { parseMoney } from '#shared/csv/values'
+import { computeStats, factsFrom } from '#shared/stats'
 
 describe('units written in the header', () => {
   it('reads the multiplier from common header styles', () => {
@@ -21,6 +23,24 @@ describe('units written in the header', () => {
     const data = datasetFromCsv(csv)
     expect(data.companies.map((c) => [c.name, c.amount])).toEqual([['Alpha', 12_500_000], ['Beta', 3_000_000], ['Gamma', 800_000]])
     expect(metricLabel('Funding to date (£m)')).toBe('Funding to date')
+  })
+})
+
+describe('audit fixes', () => {
+  it('reads money with a note after it, as Beauhurst prints it', () => {
+    expect(parseMoney('£4,979,048,139 (£5bn)')?.value).toBe(4_979_048_139)
+  })
+
+  it('gives bare headers a readable name', () => {
+    expect(metricLabel('Raised')).toBe('Amount raised')
+    expect(metricLabel('Funding')).toBe('Total funding')
+  })
+
+  it('says "joint" when the top groups are level, instead of picking one', () => {
+    const csv = ['Company,Staff,Raised', 'A,10-24,£5m', 'B,10-24,£4m', 'C,25-49,£3m', 'D,25-49,£2m', 'E,25-49,£1m', 'F,10-24,£1m', 'G,1-9,£1m', 'H,1-9,£1m', 'I,1-9,£1m'].join('\n')
+    const text = factsFrom(computeStats(datasetFromCsv(csv)), { metric: 'Amount raised' }).map((f) => f.text).join(' ')
+    expect(text).toContain('The most common team sizes are 1-9 and 10-24 and 25-49 employees, with 3 companies each.')
+    expect(text).toContain('has raised')
   })
 })
 

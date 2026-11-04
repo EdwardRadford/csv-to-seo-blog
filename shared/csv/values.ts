@@ -24,7 +24,7 @@ export interface Money {
 }
 
 export function parseMoney(text: string): Money | null {
-  const match = MONEY.exec(text.trim())
+  const match = MONEY.exec(text.trim().replace(/\s*\([^)]*\)\s*$/, ''))
   if (!match) return null
   const [, codeBefore, symbol, whole, fraction, unit, codeAfter] = match
   const base = Number((whole ?? '').replace(/,/g, '') + (fraction ?? ''))

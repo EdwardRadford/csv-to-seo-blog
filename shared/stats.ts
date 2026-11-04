@@ -119,37 +119,58 @@ export interface Fact {
  */
 export function factsFrom(stats: Stats, labels: { metric: string }): Fact[] {
   const money = (v: number) => compactMoney(v, stats.currency)
+  // Plain English for the amount: "has raised £30.3m" reads better than "has total raised of £30.3m".
+  const raised = /rais|fund|equity|invest/i.test(labels.metric)
+  const has = (v: number) => (raised ? `has raised ${money(v)}` : `has ${labels.metric.toLowerCase()} of ${money(v)}`)
   const facts: Fact[] = [{ key: 'companies', text: `The list has ${count(stats.companies)} companies.` }]
   const push = (key: string, text: string) => facts.push({ key, text })
+  // "A and B are joint most common" when the top two groups are level, rather than picking one.
+  const leaders = (groups: Group[]) => groups.filter((g) => g.count === groups[0]?.count)
+  const names = (groups: Group[]) => groups.map((g) => g.label).join(' and ')
 
   if (stats.total !== null) {
-    push('total', `Combined ${labels.metric.toLowerCase()} across the list: ${money(stats.total)}.`)
-    push('median', `The median company has ${money(stats.median!)}; the mean is ${money(stats.mean!)}.`)
-    push('threshold', `The company in last place has ${money(stats.threshold!)}, which is the bar for making the list.`)
+    push('total', `Between them, the companies ${raised ? 'have raised' : `have ${labels.metric.toLowerCase()} of`} ${money(stats.total)}.`)
+    push('median', `The median company ${has(stats.median!)}; the mean is ${money(stats.mean!)}.`)
+    push('threshold', `The company in last place ${has(stats.threshold!)}, the minimum needed to make the list.`)
   }
-  if (stats.leader?.amount != null) push('leader', `${stats.leader.name} ranks first with ${money(stats.leader.amount)}.`)
+  if (stats.leader?.amount != null) push('leader', `${stats.leader.name} ranks first and ${has(stats.leader.amount)}.`)
   else if (stats.leader) push('leader', `${stats.leader.name} ranks first.`)
   if (stats.top10Share !== null) push('top10', `The top 10 companies account for ${percent(stats.top10Share)} of the total.`)
   if (stats.top5Share !== null) push('top5', `The top 5 companies account for ${percent(stats.top5Share)} of the total.`)
 
-  const [topRegion, secondRegion] = stats.regions
-  if (topRegion) {
-    push('region_top', `${topRegion.label} is home to ${count(topRegion.count)} of the companies (${percent(topRegion.share)}).`)
-    if (secondRegion) push('region_second', `${secondRegion.label} is next with ${count(secondRegion.count)}.`)
-    push('region_count', `The companies are spread across ${count(stats.regions.length)} locations.`)
-    const outside = stats.companies - topRegion.count
-    if (outside > 0) push('region_outside', `${count(outside)} companies are based outside ${topRegion.label}.`)
+  const topRegions = leaders(stats.regions)
+  if (topRegions.length === 1) {
+    const top = topRegions[0]!
+    push('region_top', `${top.label} is home to ${count(top.count)} of the companies (${percent(top.share)}).`)
+    const second = leaders(stats.regions.slice(1))
+    if (second.length) push('region_second', `${names(second)} ${second.length > 1 ? 'are joint second' : 'is second'} with ${count(second[0]!.count)} each.`.replace(' each.', second.length > 1 ? ' each.' : '.'))
+    const outside = stats.companies - top.count
+    if (outside > 0) push('region_outside', `${count(outside)} companies are based outside ${top.label}.`)
+  } else if (topRegions.length > 1) {
+    push('region_top', `${names(topRegions)} are level, with ${count(topRegions[0]!.count)} companies each.`)
   }
+  if (stats.regions.length > 1) push('region_count', `In total, the companies are spread across ${count(stats.regions.length)} locations.`)
+
   if (stats.stages.length === 1) push('stage_all', `All ${count(stats.stages[0]!.count)} companies with a known stage are at ${stats.stages[0]!.label} stage.`)
-  else if (stats.stages[0]) push('stage_top', `${stats.stages[0].label} is the most common stage, with ${count(stats.stages[0].count)} companies.`)
+  else if (stats.stages.length > 1) {
+    const top = leaders(stats.stages)
+    push('stage_top', top.length > 1
+      ? `${names(top)} are the joint most common stages, with ${count(top[0]!.count)} companies each.`
+      : `${top[0]!.label} is the most common stage, with ${count(top[0]!.count)} companies.`)
+  }
 
   // "Most common size" only means something for bands ("10-24"), not exact headcounts.
-  const commonSize = stats.amountBySize.length ? [...stats.sizes].sort((a, b) => b.count - a.count)[0] : undefined
-  if (commonSize) push('size_common', `The most common team size is ${commonSize.label} employees (${count(commonSize.count)} companies).`)
+  if (stats.amountBySize.length) {
+    const top = leaders([...stats.sizes].sort((a, b) => b.count - a.count))
+    push('size_common', top.length > 1
+      ? `The most common team sizes are ${names(top)} employees, with ${count(top[0]!.count)} companies each.`
+      : `The most common team size is ${top[0]!.label} employees (${count(top[0]!.count)} companies).`)
+  }
   const biggestBand = [...stats.amountBySize].sort((a, b) => b.mean - a.mean)[0]
   if (biggestBand) push('size_amount', `Companies with ${biggestBand.label} employees have the highest average, at ${money(biggestBand.mean)}.`)
 
-  stats.tags.slice(0, 3).forEach((tag, i) => push(`tag_${i + 1}`, `"${tag.label}" applies to ${count(tag.count)} companies.`))
+  // A tag nearly every company has ("Application software" on 98 of 100) says nothing, so skip it.
+  stats.tags.filter((t) => t.share <= 0.9).slice(0, 3).forEach((tag, i) => push(`tag_${i + 1}`, `${count(tag.count)} companies are classed as "${tag.label}".`))
 
   if (stats.founded) {
     const f = stats.founded

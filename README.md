@@ -45,7 +45,8 @@ flowchart LR
 - **Per-page tags:** meta description, canonical, Open Graph, Twitter card, `en-GB`, and `robots` (an optional noindex box on upload).
 - **JSON-LD:** `Article`, `BreadcrumbList`, and an `ItemList` of every company as an `Organization` (website, location, size, stage, amount raised).
 - **Crawling:** `/sitemap.xml` is built from the page index on every request, so new pages are discoverable straight away. `/robots.txt` points to it and blocks `/api/` and `/upload`.
-- **Linking:** an index page links every report, and each report links to the others.
+- **Linking:** the index page links every report, and each report links to the three latest others.
+- **Sharing:** Open Graph and Twitter large-card tags with a 1200x630 image. Sorted table views (`?sort=`) are `noindex` and canonicalise to the clean URL; trailing slashes 301 to the clean URL.
 - **Structure:** one H1 and a clear H2 order (overview, key findings, locations, ranking, what to watch, FAQ, methodology).
 
 ## Tools
@@ -75,6 +76,8 @@ npm run dev             # http://localhost:3000
 
 Without a key it still works: every page gets template copy.
 
+A fresh clone starts with no reports (local pages are stored in `.data/`, which is not committed). Open http://localhost:3000/upload and upload `samples/fintech-uk-seed-top-100.csv` to create the first one.
+
 ```bash
 npm test                          # unit tests
 LIVE=1 npx vitest run test/live   # optional: real Gemini calls (uses your quota)
@@ -87,10 +90,11 @@ node scripts/make-samples.mjs     # rebuild the synthetic sample CSVs
 | --- | --- | --- |
 | `NUXT_GEMINI_API_KEY` | `.env` locally; `wrangler secret put NUXT_GEMINI_API_KEY` in production | Server-side only; never sent to the browser. |
 | `NUXT_PUBLIC_SITE_URL` | `nuxt.config.ts` default | Used for canonical URLs, JSON-LD and the sitemap. |
+| `NUXT_ADMIN_TOKEN` | `wrangler secret put NUXT_ADMIN_TOKEN` | Optional. Lets the site owner regenerate or delete any page (sent as `x-edit-token`). |
 | `NUXT_PROTECTED_SLUGS` | `nuxt.config.ts` default | Pages that can be regenerated but not deleted (the fintech example). |
 | KV namespace, rate limit | `wrangler.jsonc` | |
 
-Deploy: `npm run build && npx wrangler deploy`.
+Deploy: `npm run build && npx wrangler deploy`. `wrangler.jsonc` pins my Cloudflare `account_id` and KV namespace id; to deploy your own copy, replace both (`npx wrangler kv namespace create PAGES` gives you a new id).
 
 ## Project layout
 
@@ -129,20 +133,28 @@ Lighthouse on the live fintech page (4 Nov 2026):
 
 Mobile performance is held back by page weight (the 100-row table, the JSON-LD and Nuxt's hydration data, about 32 KB compressed) and the web fonts. See Limitations.
 
+## Security
+
+- Every response carries a Content Security Policy (same-origin only, no framing), `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy` and HSTS.
+- Upload limits: 1 MB, 2,000 rows, 60 columns, checked on the real body, not just the `Content-Length` header. Per-IP rate limits per endpoint (Cloudflare rate-limiting binding); the limiter fails closed in production if the binding is missing.
+- Nothing from the CSV or the AI is rendered as HTML: Vue escapes it, company names are bolded by splitting text, and the JSON-LD escapes `<`. Only plain `http(s)` web addresses become links.
+- The Gemini key and the admin token are server-side secrets. The edit token is never included in a page's data. Unexpected errors are logged and the visitor gets a generic message.
+
 ## Key decisions
 
 - **Numbers in code, words from the AI.** LLMs are good at prose and bad at arithmetic. Keeping every figure out of the model's hands, then checking its output, means a page can't publish a number that isn't in the data.
 - **Rules before AI for column mapping.** Header and type rules are instant, free and predictable, and they handle every sample file. The AI is only asked about leftovers, and the user confirms the result, so one wrong guess can't spoil a page.
 - **A fixed title formula.** It keeps titles consistent and targeted, and stops the AI drifting into clickbait.
 - **KV over a database.** Each page is read whole, by its slug, so a key-value store fits. The trade-offs: KV is eventually consistent (a new page can take a few seconds to appear in other regions), and the page index is a single key rewritten on each save. That's fine for a demo, but not for thousands of pages (see Limitations).
-- **A chain of models, then a template.** The free Gemini tier returns 503 when busy and 429 when a model's daily allowance is used up (20 requests a day for `gemini-3.5-flash`). Each model has its own allowance, so the app tries four in turn: a busy model gets one retry after 1.5 seconds, and an exhausted one is skipped straight away. If all four fail, template copy built from the same figures is used. The demo can't fail, and the methodology section says which model wrote the copy, or that the template did.
+- **A chain of models, then a template.** The free Gemini tier returns 503 when busy and 429 when a model's daily allowance is used up (20 requests a day for `gemini-3.5-flash`). Each model has its own allowance, so the app tries four in turn: a busy model gets one retry after 1.5 seconds, and an exhausted one is skipped straight away. If all four fail, or the whole chain runs past 50 seconds, template copy built from the same figures is used, so generation still completes. The methodology section says which model wrote the copy, or that the template did. Regenerating never replaces AI copy with template copy.
 
 ## Limitations
 
 - The checker verifies numbers, not meaning. It can't catch a correct figure attached to the wrong claim. The prompt guards against that, but code doesn't.
 - The AI is never shown the full dataset, only the top 10 companies and the computed facts, so the copy can't say anything about the rest of the list beyond the stats.
 - The page index is one KV key, so two uploads at the same moment could race. A database (D1) or Durable Object would fix this at scale.
-- The free Gemini tier is small: about 20 requests a day per model. The model chain multiplies that, and a soft daily cap (150 generations) stops the public demo burning it. After that, pages get template copy.
+- The free Gemini tier is small: about 20 requests a day per model. The model chain multiplies that, and a soft daily cap (40 generations) stops the public demo burning it. After that, pages get template copy.
 - Mobile performance could be improved by sending less hydration data (the table could hydrate from the JSON-LD, or sorting could happen on the server only), and by subsetting the fonts to the characters actually used.
 - Uploaded files aren't kept: only the cleaned data is stored. Values are always shown as text, and the app never exports CSV, so spreadsheet formula injection doesn't apply.
-- Anyone can upload and delete (except the protected example). A real deployment would put generation behind a login.
+- Anyone can upload. Only the browser that generated a page (it holds a random edit token) or the site owner (admin token) can regenerate or delete it, and the fintech example can't be deleted. A real deployment would put generation behind a login.
+- The page index is a single KV key, so two uploads saved at the same moment could drop one from the list (the page itself survives).

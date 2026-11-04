@@ -2,7 +2,7 @@
 // template copy used when the AI is unavailable or its answer fails the checks.
 import type { Fact, Stats } from './stats'
 import type { Dataset } from './types'
-import { compactMoney, count, percent } from './format'
+import { compactMoney, count, percent, sentenceCase } from './format'
 
 export interface PageCopy {
   metaDescription: string
@@ -56,6 +56,10 @@ Rules:
 - Keep each number attached to what its fact says it measures. Never reuse a figure to describe something else.
 - Describe what the data shows, not why. No claims about investor sentiment, demand, momentum or causes. The outlook says what to watch, framed as open questions the data raises.
 - Do not name any company that is not in the TOP COMPANIES list. Do not invent investors, products, events or trends.
+- Write like an analyst, not a list of facts: rephrase the FACTS in your own words, never copy them word for word.
+- Use each figure at most twice across the whole page. Vary what each section says.
+- Name at least three of the TOP COMPANIES in the overview or findings, and say in a few words what each does, based on its description.
+- FAQs should be questions a searcher would really ask (who leads, where they are based, how much they raised, what it takes to make the list). Never ask how many companies are on the list.
 - Mention the industry and location naturally for search, but never stuff keywords.
 - Plain text only: no markdown, no HTML, no emojis. Never use an em dash or en dash; use a comma, a full stop or a plain hyphen.`
 
@@ -65,7 +69,7 @@ export function buildPrompt(subject: Subject, facts: Fact[], data: Dataset): str
     if (c.description) parts.push(`- ${c.description.slice(0, 160)}`)
     return parts.join(' ')
   })
-  const scope = [subject.qualifier, subject.industry].filter(Boolean).join(' ')
+  const scope = sentenceCase([subject.qualifier, subject.industry].filter(Boolean).join(' '))
   return `Write the copy for a ranking page: "the top ${data.companies.length} ${scope} companies in ${place(subject.geography)}", ranked by ${subject.metric.toLowerCase()}.
 
 FACTS (the only numbers you may use):
@@ -112,7 +116,7 @@ export function numbersIn(text: string): NumberToken[] {
 export interface CheckResult { ok: boolean; problems: string[] }
 
 /**
- * Rejects copy that uses any number not in the facts, names a company outside
+ * Rejects copy that uses any number not in the facts, repeats one figure too often,
  * the dataset in a ranking claim, or misses the shape we asked for.
  */
 export function checkCopy(copy: PageCopy, facts: Fact[], data: Dataset, extra: number[] = []): CheckResult {
@@ -134,8 +138,13 @@ export function checkCopy(copy: PageCopy, facts: Fact[], data: Dataset, extra: n
     if (/[–—]/.test(raw)) problems.push('contains an en or em dash')
   }
 
+  // The same figure five times in one page reads as padding.
+  const uses = new Map<string, number>()
+  for (const raw of texts) for (const t of numbersIn(raw)) if (t.value >= 10) uses.set(t.text, (uses.get(t.text) ?? 0) + 1)
+  for (const [figure, n] of uses) if (n > 4) problems.push(`"${figure}" is used ${n} times`)
+
   const meta = copy.metaDescription.length
-  if (meta < 70 || meta > 170) problems.push(`meta description is ${meta} characters (want 130 to 155)`)
+  if (meta < 110 || meta > 165) problems.push(`meta description is ${meta} characters (want 130 to 155)`)
   if (copy.keyFindings.length < 3) problems.push('fewer than three key findings')
   if (copy.faq.length < 3) problems.push('fewer than three FAQs')
   if (!copy.intro.trim() || copy.overview.length === 0) problems.push('missing intro or overview')
@@ -147,7 +156,7 @@ export function checkCopy(copy: PageCopy, facts: Fact[], data: Dataset, extra: n
 
 export function fallbackCopy(subject: Subject, stats: Stats, data: Dataset): PageCopy {
   const money = (v: number) => compactMoney(v, stats.currency)
-  const scope = [subject.qualifier, subject.industry].filter(Boolean).join(' ')
+  const scope = sentenceCase([subject.qualifier, subject.industry].filter(Boolean).join(' '))
   const where = place(subject.geography)
   const n = count(stats.companies)
   const top = stats.regions[0]
@@ -162,7 +171,9 @@ export function fallbackCopy(subject: Subject, stats: Stats, data: Dataset): Pag
   if (stats.top10Share !== null) findings.push(`The top 10 companies account for ${percent(stats.top10Share)} of the total.`)
   if (stats.median !== null) findings.push(`The median company on the list has ${money(stats.median)}.`)
   if (top) findings.push(`${top.label} is home to ${count(top.count)} of the ${n} companies.`)
-  if (stats.tags[0]) findings.push(`"${stats.tags[0].label}" is the most common category, covering ${count(stats.tags[0].count)} companies.`)
+  // Skip a tag nearly every company has; it says nothing about the sector.
+  const tag = stats.tags.find((t) => t.share <= 0.9)
+  if (tag) findings.push(`"${tag.label}" is the most common category, covering ${count(tag.count)} companies.`)
   if (stats.founded) findings.push(`${percent(stats.founded.recentShare)} were founded in ${stats.founded.recentFrom} or later.`)
 
   const faq: PageCopy['faq'] = [
@@ -182,7 +193,11 @@ export function fallbackCopy(subject: Subject, stats: Stats, data: Dataset): Pag
     ],
     keyFindings: findings,
     locations: top ? `${top.label} leads with ${count(top.count)} companies (${percent(top.share)}), and ${count(stats.companies - top.count)} are based elsewhere.` : null,
-    outlook: [`This ranking is a snapshot of the dataset as uploaded. Regenerate the page when the data changes to keep the figures current.`],
+    outlook: [
+      stats.top10Share !== null
+        ? `The question to watch is whether funding spreads beyond the leaders: today the top 10 hold ${percent(stats.top10Share)} of the total. A later edition of this list will show whether that share rises or falls.`
+        : `A later edition of this list will show how the ranking changes as these companies grow.`
+    ],
     faq
   }
 }
@@ -193,10 +208,9 @@ const clip = (text: string, max: number) => (text.length <= max ? text : `${text
 /** Fixed title formula, matching how Beauhurst titles its own lists. */
 export function pageTitle(subject: Subject, companies: number): string {
   const scope = [subject.qualifier, subject.industry].filter((part): part is string => Boolean(part)).map(titleCase).join(' ')
-  return `Top ${companies} ${scope} Companies in ${titleCasePlace(place(subject.geography))} | ${subject.year}`
+  return `Top ${companies} ${scope} Companies in ${place(subject.geography)} | ${subject.year}`
 }
 
 const ACRONYMS = new Set(['ai', 'iot', 'ml', 'vr', 'ar', 'saas', 'b2b', 'b2c', 'esg', 'uk', 'eu', 'us'])
 const titleCase = (text: string) =>
   text.replace(/[\p{L}\d]+/gu, (word) => (ACRONYMS.has(word.toLowerCase()) ? word.toUpperCase() : word.charAt(0).toUpperCase() + word.slice(1)))
-const titleCasePlace = (text: string) => text.replace(/^the /, 'the ')

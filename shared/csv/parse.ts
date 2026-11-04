@@ -3,6 +3,7 @@ import type { ParsedCsv } from '../types'
 
 export const MAX_BYTES = 1_000_000
 export const MAX_ROWS = 2_000
+export const MAX_COLUMNS = 60
 
 export class CsvError extends Error {}
 
@@ -24,6 +25,9 @@ export function parseCsv(text: string): ParsedCsv {
     throw new CsvError('Could not find at least two columns. Is this a CSV file?')
   }
 
+  if (headerRow.length > MAX_COLUMNS) {
+    throw new CsvError(`The file has ${headerRow.length} columns. The limit is ${MAX_COLUMNS}.`)
+  }
   const headers = headerRow.map((h, i) => h.trim() || `Column ${i + 1}`)
   const warnings: string[] = []
   if (body.length === 0) throw new CsvError('The file has a header row but no data.')
@@ -36,7 +40,7 @@ export function parseCsv(text: string): ParsedCsv {
     if (row.length !== headers.length) ragged++
     return headers.map((_, i) => (row[i] ?? '').trim())
   })
-  if (ragged) warnings.push(`${ragged} row(s) had a different number of cells from the header and were lined up.`)
+  if (ragged) warnings.push(`${ragged} ${ragged === 1 ? 'row had' : 'rows had'} a different number of cells from the header and ${ragged === 1 ? 'was' : 'were'} lined up.`)
 
   return { headers, rows, delimiter: result.meta.delimiter, warnings }
 }

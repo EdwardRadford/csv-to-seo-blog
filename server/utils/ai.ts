@@ -15,6 +15,7 @@ const MAPPING_SCHEMA = {
   type: 'object',
   properties: {
     industry: { type: 'string', description: 'Short lower-case name for the industry these companies are in, e.g. "fintech", "healthtech", "cleantech", "AI".' },
+    geography: { type: 'string', description: 'Where the companies are, judged from the location values: "UK" if they are UK regions or cities, a country name, or "Europe" etc. if they span several countries.' },
     assignments: {
       type: 'array',
       items: {
@@ -27,12 +28,13 @@ const MAPPING_SCHEMA = {
       }
     }
   },
-  required: ['industry', 'assignments']
+  required: ['industry', 'geography', 'assignments']
 } as const
 
 export interface MappingResult {
   match: RoleMatch
   industry: string | null
+  geography: string | null
   aiUsed: boolean
   aiError?: string
 }
@@ -52,12 +54,12 @@ ${rules.unmatched.map((i) => describe(profiles[i]!)).join('\n') || '(none)'}
 Roles still empty: ${missing.join(', ') || '(none)'}.
 For each unplaced column, give the empty role it fills, or "none" if it fits no role.
 Roles: name = company name, rank = position in the list, amount = money raised or similar, region = location, stage = company or funding stage, size = employee count, description = what the company does, website = URL, tags = industries or sectors, founded = founding year.
-Also give the industry the dataset covers, judged from the filename, descriptions and tags.
+Also give the industry the dataset covers, judged from the filename, descriptions and tags, and where the companies are, judged from the location column.
 All columns, for context:
 ${profiles.map(describe).join('\n')}`
 
   try {
-    const { data } = await generateJson<{ industry: string; assignments: { column: string; role: Role | 'none' }[] }>({
+    const { data } = await generateJson<{ industry: string; geography?: string; assignments: { column: string; role: Role | 'none' }[] }>({
       apiKey,
       system: 'You label the columns of CSV files. Answer only from the evidence given.',
       prompt,
@@ -65,7 +67,8 @@ ${profiles.map(describe).join('\n')}`
       // The user is waiting on this step, so short timeouts; the rules already stand on their own.
       timeoutMs: 6_000,
       thinking: 'minimal',
-      models: MODELS
+      models: MODELS,
+      deadline: Date.now() + 15_000
     })
     const mapping: Mapping = { ...rules.mapping }
     const source = { ...rules.source }
@@ -79,9 +82,9 @@ ${profiles.map(describe).join('\n')}`
       unmatched.delete(profile.index)
     }
     const industry = cleanIndustry(data.industry)
-    return { match: { mapping, source, unmatched: [...unmatched] }, industry, aiUsed: true }
+    return { match: { mapping, source, unmatched: [...unmatched] }, industry, geography: cleanIndustry(data.geography), aiUsed: true }
   } catch (error) {
-    return { match: rules, industry: null, aiUsed: false, aiError: error instanceof GeminiError ? `${error.reason}: ${error.message.slice(0, 160)}` : 'error' }
+    return { match: rules, industry: null, geography: null, aiUsed: false, aiError: error instanceof GeminiError ? `${error.reason}: ${error.message.slice(0, 160)}` : 'error' }
   }
 }
 
@@ -110,10 +113,11 @@ export interface CopyResult {
 export async function writeCopy(apiKey: string, subject: Subject, stats: Stats, facts: Fact[], data: Dataset): Promise<CopyResult> {
   const notes: string[] = []
   let prompt = buildPrompt(subject, facts, data)
+  const deadline = Date.now() + 50_000
 
   for (let attempt = 1; attempt <= 2; attempt++) {
     try {
-      const { data: raw, model } = await generateJson<PageCopy>({ apiKey, system: SYSTEM_PROMPT, prompt, schema: COPY_SCHEMA, timeoutMs: 40_000, thinking: 'low' })
+      const { data: raw, model } = await generateJson<PageCopy>({ apiKey, system: SYSTEM_PROMPT, prompt, schema: COPY_SCHEMA, timeoutMs: 35_000, thinking: 'low', deadline })
       const copy = tidy(raw, data.has.region)
       const check = checkCopy(copy, facts, data, [subject.year])
       if (check.ok) return { copy, source: 'ai', model, notes }

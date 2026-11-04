@@ -12,6 +12,7 @@ interface Analysis {
   mapping: Record<Role, string | null>
   source: Partial<Record<Role, 'header' | 'type' | 'ai'>>
   industry: string | null
+  geography: string | null
   aiUsed: boolean
   warnings: string[]
   preview: { rank: number; name: string; amount: number | null }[]
@@ -40,7 +41,10 @@ const noindex = ref(false)
 const step = ref<'choose' | 'reading' | 'review' | 'generating'>('choose')
 const error = ref('')
 const dragging = ref(false)
-const progress = ref('')
+const elapsed = ref(0)
+const status = ref('')
+const reviewHeading = ref<HTMLElement | null>(null)
+let controller: AbortController | null = null
 
 async function readFile(file: File | undefined) {
   error.value = ''
@@ -48,26 +52,39 @@ async function readFile(file: File | undefined) {
   if (file.size > 1_000_000) { error.value = 'That file is over 1 MB. Please upload a smaller CSV.'; return }
   if (!/\.(csv|tsv|txt)$/i.test(file.name)) { error.value = 'Please choose a .csv file.'; return }
   step.value = 'reading'
+  status.value = 'Reading the file.'
   try {
-    csv.value = await file.text()
+    csv.value = decode(await file.arrayBuffer())
     const result = await $fetch<Analysis>('/api/analyse', { method: 'POST', body: { csv: csv.value, filename: file.name } })
     analysis.value = result
     mapping.value = { ...result.mapping }
     industry.value = result.industry ?? ''
-    geography.value = /europe/i.test(file.name) ? 'Europe' : 'UK'
+    geography.value = result.geography || 'UK'
     step.value = 'review'
+    status.value = `Read ${result.rows} rows. Check the detected columns below.`
+    // Move focus to the new step so keyboard and screen reader users land in the right place.
+    await nextTick()
+    reviewHeading.value?.focus()
   } catch (e: any) {
     error.value = e?.data?.statusMessage ?? 'The file could not be read.'
     step.value = 'choose'
   }
 }
 
+function decode(bytes: ArrayBuffer): string {
+  try {
+    return new TextDecoder('utf-8', { fatal: true }).decode(bytes)
+  } catch {
+    return new TextDecoder('windows-1252').decode(bytes)
+  }
+}
+
 function onDrop(event: DragEvent) {
   dragging.value = false
+  if (step.value === 'reading') return
   readFile(event.dataTransfer?.files?.[0])
 }
 
-const columnsFor = (role: Role) => analysis.value?.columns ?? []
 const canGenerate = computed(() => Boolean(mapping.value.name) && industry.value.trim().length > 1)
 
 let timer: ReturnType<typeof setInterval> | undefined
@@ -75,22 +92,37 @@ async function generate() {
   if (!analysis.value || !canGenerate.value) return
   step.value = 'generating'
   error.value = ''
-  const stages = ['Cleaning the data', 'Calculating the statistics', 'Writing the copy with Gemini', 'Checking every number against the data', 'Saving the page']
-  let i = 0
-  progress.value = stages[0]!
-  timer = setInterval(() => { i = Math.min(i + 1, stages.length - 1); progress.value = stages[i]! }, 3500)
+  elapsed.value = 0
+  status.value = 'Generating the page. This usually takes 10 to 30 seconds, and up to a minute when the AI is busy.'
+  timer = setInterval(() => { elapsed.value++ }, 1000)
+  // Give up after 90 seconds rather than leave the page waiting forever.
+  controller = new AbortController()
+  const timeout = setTimeout(() => controller?.abort(), 90_000)
   try {
-    const result = await $fetch<{ slug: string }>('/api/generate', {
+    const result = await $fetch<{ slug: string; editToken?: string }>('/api/generate', {
       method: 'POST',
+      signal: controller.signal,
       body: { csv: csv.value, filename: analysis.value.filename, mapping: mapping.value, industry: industry.value, geography: geography.value, noindex: noindex.value }
     })
+    // Keep the edit token in this browser only, so this visitor can regenerate or delete their page.
+    try { if (result.editToken) localStorage.setItem(`edit:${result.slug}`, result.editToken) } catch {}
+    status.value = 'Page ready. Opening it now.'
     await navigateTo(`/${result.slug}`)
   } catch (e: any) {
-    error.value = e?.data?.statusMessage ?? 'Generation failed. Please try again.'
+    error.value = controller?.signal.aborted
+      ? 'Generation was cancelled or took too long. Please try again.'
+      : e?.data?.statusMessage ?? 'Generation failed. Please try again.'
+    status.value = ''
     step.value = 'review'
   } finally {
     clearInterval(timer)
+    clearTimeout(timeout)
+    controller = null
   }
+}
+
+function cancel() {
+  controller?.abort()
 }
 
 function startOver() {
@@ -114,9 +146,9 @@ onBeforeUnmount(() => clearInterval(timer))
     </header>
 
     <ol class="steps small" aria-label="Progress">
-      <li :class="{ on: step === 'choose' || step === 'reading' }">1. Choose a file</li>
-      <li :class="{ on: step === 'review' }">2. Check the columns</li>
-      <li :class="{ on: step === 'generating' }">3. Generate</li>
+      <li :class="{ on: step === 'choose' || step === 'reading' }" :aria-current="step === 'choose' || step === 'reading' ? 'step' : undefined">1. Choose a file</li>
+      <li :class="{ on: step === 'review' }" :aria-current="step === 'review' ? 'step' : undefined">2. Check the columns</li>
+      <li :class="{ on: step === 'generating' }" :aria-current="step === 'generating' ? 'step' : undefined">3. Generate</li>
     </ol>
 
     <p v-if="error" class="notice warn" role="alert">{{ error }}</p>
@@ -132,7 +164,7 @@ onBeforeUnmount(() => clearInterval(timer))
         @drop.prevent="onDrop"
       >
         <input type="file" accept=".csv,text/csv" class="visually-hidden" :disabled="step === 'reading'" @change="readFile(($event.target as HTMLInputElement).files?.[0])">
-        <span class="drop-title">{{ step === 'reading' ? 'Reading the file…' : 'Drop a CSV here, or select to browse' }}</span>
+        <span class="drop-title">{{ step === 'reading' ? 'Reading the file...' : 'Drop a CSV here, or select to browse' }}</span>
         <span class="small muted">Up to 1 MB and 2,000 rows. Need one? <NuxtLink to="/#samples">Download a sample</NuxtLink>.</span>
       </label>
     </section>
@@ -140,7 +172,7 @@ onBeforeUnmount(() => clearInterval(timer))
     <!-- Step 2 -->
     <section v-else-if="analysis && step === 'review'" aria-labelledby="review-heading" class="review">
       <div class="file-line">
-        <h2 id="review-heading">{{ analysis.filename }}</h2>
+        <h2 id="review-heading" ref="reviewHeading" tabindex="-1">{{ analysis.filename }}</h2>
         <span class="muted small">{{ analysis.rows }} rows · {{ analysis.columns.length }} columns</span>
         <button type="button" class="link small" @click="startOver">Choose a different file</button>
       </div>
@@ -178,7 +210,7 @@ onBeforeUnmount(() => clearInterval(timer))
               </span>
               <select v-model="mapping[role]">
                 <option :value="null">Not in this file</option>
-                <option v-for="col in columnsFor(role)" :key="col.header" :value="col.header">{{ col.header }}</option>
+                <option v-for="col in analysis.columns" :key="col.header" :value="col.header">{{ col.header }}</option>
               </select>
             </label>
           </div>
@@ -186,17 +218,21 @@ onBeforeUnmount(() => clearInterval(timer))
 
         <div class="go">
           <button class="button" type="submit" :disabled="!canGenerate">Generate the page</button>
-          <span class="small muted">Takes about 10 to 30 seconds.</span>
+          <span class="small muted">Usually 10 to 30 seconds; up to a minute when the AI is busy.</span>
         </div>
       </form>
     </section>
 
     <!-- Step 3 -->
-    <section v-if="step === 'generating'" class="working" aria-live="polite">
+    <section v-if="step === 'generating'" class="working">
       <div class="spinner" aria-hidden="true" />
-      <p><strong>{{ progress }}…</strong></p>
-      <p class="small muted">You'll be taken to the new page when it's ready.</p>
+      <p><strong>Cleaning the data, calculating the figures, writing and checking the copy</strong></p>
+      <p class="small muted num">{{ elapsed }} seconds. You'll be taken to the new page when it's ready.</p>
+      <button type="button" class="button secondary" @click="cancel">Cancel</button>
     </section>
+
+    <!-- Always in the page, so screen readers reliably announce changes to it. -->
+    <p class="visually-hidden" role="status" aria-live="polite">{{ status }}</p>
   </div>
 </template>
 
@@ -204,7 +240,7 @@ onBeforeUnmount(() => clearInterval(timer))
 .page { padding-top: 48px; display: grid; gap: 32px; max-width: 880px; }
 .lead { margin-top: 12px; max-width: 60ch; }
 .head h1 { margin-top: 8px; }
-.steps { list-style: none; padding: 0; margin: 0; display: flex; gap: 24px; color: var(--faint); flex-wrap: wrap; }
+.steps { list-style: none; padding: 0; margin: 0; display: flex; gap: 24px; color: var(--muted); flex-wrap: wrap; }
 .steps .on { color: var(--accent); font-weight: 600; }
 
 .drop {
@@ -212,12 +248,13 @@ onBeforeUnmount(() => clearInterval(timer))
   min-height: 220px; padding: 32px; cursor: pointer;
   border: 2px dashed var(--line); border-radius: var(--radius); background: var(--panel);
 }
+.drop:has(input:focus-visible) { outline: 3px solid var(--accent); outline-offset: 2px; }
 .drop:hover, .drop.dragging, .drop:focus-within { border-color: var(--accent); background: #f1f0fb; }
 .drop-title { font-weight: 600; font-size: var(--step-1); }
 
 .review { display: grid; gap: 24px; }
 .file-line { display: flex; flex-wrap: wrap; align-items: baseline; gap: 12px; }
-.file-line h2 { font-size: var(--step-1); overflow-wrap: anywhere; }
+.file-line h2 { font-size: var(--step-1); overflow-wrap: anywhere; outline: none; }
 .link { background: none; border: 0; padding: 0; color: var(--accent); text-decoration: underline; cursor: pointer; font: inherit; }
 .notice ul, ul.notice { margin: 0; padding-left: 32px; }
 

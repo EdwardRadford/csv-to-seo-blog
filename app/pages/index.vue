@@ -12,7 +12,17 @@ useSeoMeta({
   ogTitle: siteName,
   ogDescription: description,
   ogType: 'website',
-  ogUrl: siteUrl
+  ogUrl: `${siteUrl}/`,
+  ogLocale: 'en_GB',
+  ogSiteName: siteName,
+  ogImage: `${siteUrl}/og.png`,
+  ogImageWidth: 1200,
+  ogImageHeight: 630,
+  ogImageAlt: 'Sector Rankings: a large number 100 above a chart of funding by rank',
+  twitterImage: `${siteUrl}/og.png`,
+  twitterCard: 'summary_large_image',
+  twitterTitle: siteName,
+  twitterDescription: description
 })
 useHead({ link: [{ rel: 'canonical', href: `${siteUrl}/` }] })
 

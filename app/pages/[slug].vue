@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { PageRecord, PageSummary } from '#shared/page'
 import { place } from '#shared/copy'
-import { compactMoney, count, metricLabel, percent } from '#shared/format'
+import { compactMoney, count, metricLabel, percent, sentenceCase } from '#shared/format'
 
 // The one template every report uses. It only reads the stored record:
 // data and stats for the figures, content.copy for the words.
@@ -13,7 +13,10 @@ const { data: page, error } = await useFetch<PageRecord & { protected: boolean }
 if (error.value || !page.value) {
   throw createError({ statusCode: 404, statusMessage: 'Report not found', fatal: true })
 }
-const { data: allPages } = await useFetch<PageSummary[]>('/api/pages')
+const { data: related } = await useFetch<PageSummary[]>('/api/pages', {
+  key: `related-${slug}`,
+  transform: (pages) => pages.filter((r) => r.slug !== slug && !r.noindex).slice(0, 3)
+})
 
 const p = page.value
 // Older pages stored the raw header ("total_funding_usd"); tidy it for display either way.
@@ -21,13 +24,14 @@ const metric = metricLabel(p.subject.metric)
 const copy = computed(() => page.value!.content.copy)
 const stats = computed(() => page.value!.stats)
 const where = place(p.subject.geography)
-const scope = [p.subject.qualifier, p.subject.industry].filter(Boolean).join(' ')
+// "seed-stage fintech" in a sentence, but "AI" rather than "ai".
+const scope = sentenceCase([p.subject.qualifier, p.subject.industry].filter(Boolean).join(' '))
+const crumb = sentenceCase(p.subject.industry.charAt(0).toUpperCase() + p.subject.industry.slice(1))
 const money = (v: number) => compactMoney(v, stats.value.currency)
 const url = `${siteUrl}/${slug}`
 const dateOf = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
 const wordCount = computed(() => [copy.value.intro, ...copy.value.overview, ...copy.value.keyFindings, copy.value.locations ?? '', ...copy.value.outlook, ...copy.value.faq.flatMap((f) => [f.question, f.answer])].join(' ').split(/\s+/).length)
 const readingTime = computed(() => Math.max(2, Math.round((wordCount.value + page.value!.data.companies.length * 12) / 230)))
-const related = computed(() => (allPages.value ?? []).filter((r) => r.slug !== slug && !r.noindex).slice(0, 3))
 const names = computed(() => page.value!.data.companies.map((c) => c.name))
 const curve = computed(() => {
   const list = page.value!.data.companies.map((c) => c.amount ?? 0)
@@ -71,10 +75,15 @@ useSeoMeta({
   ogLocale: 'en_GB',
   articlePublishedTime: p.createdAt,
   articleModifiedTime: p.updatedAt,
-  twitterCard: 'summary',
+  twitterCard: 'summary_large_image',
+  ogImage: `${siteUrl}/og.png`,
+  ogImageWidth: 1200,
+  ogImageHeight: 630,
+  ogImageAlt: 'Sector Rankings: a large number 100 above a chart of funding by rank',
+  twitterImage: `${siteUrl}/og.png`,
   twitterTitle: p.title,
   twitterDescription: copy.value.metaDescription,
-  robots: p.noindex ? 'noindex, follow' : 'index, follow, max-snippet:-1'
+  robots: p.noindex || route.query.sort ? 'noindex, follow' : 'index, follow, max-snippet:-1'
 })
 useHead({
   link: [{ rel: 'canonical', href: url }],
@@ -92,7 +101,7 @@ async function regenerate() {
   busy.value = 'regenerate'
   message.value = 'Rewriting the copy. This takes up to 30 seconds.'
   try {
-    const result = await $fetch<{ copySource: string }>(`/api/pages/${slug}/regenerate`, { method: 'POST' })
+    const result = await $fetch<{ copySource: string }>(`/api/pages/${slug}/regenerate`, { method: 'POST', headers: authHeaders() })
     await refreshNuxtData()
     message.value = result.copySource === 'ai' ? 'New copy written and checked.' : 'The AI was unavailable, so template copy was used.'
   } catch (e: any) {
@@ -104,7 +113,8 @@ async function regenerate() {
 async function remove() {
   busy.value = 'delete'
   try {
-    await $fetch(`/api/pages/${slug}`, { method: 'DELETE' })
+    await $fetch(`/api/pages/${slug}`, { method: 'DELETE', headers: authHeaders() })
+    try { localStorage.removeItem(`edit:${slug}`) } catch {}
     await navigateTo('/')
   } catch (e: any) {
     message.value = e?.data?.statusMessage ?? 'Could not delete this page.'
@@ -112,6 +122,11 @@ async function remove() {
   }
 }
 const confirmDelete = ref(false)
+const editToken = ref<string | null>(null)
+onMounted(() => {
+  try { editToken.value = localStorage.getItem(`edit:${slug}`) } catch {}
+})
+const authHeaders = () => ({ 'x-edit-token': editToken.value ?? '' })
 </script>
 
 <template>
@@ -121,13 +136,13 @@ const confirmDelete = ref(false)
         <nav aria-label="Breadcrumb" class="crumbs small">
           <NuxtLink to="/">Reports</NuxtLink>
           <span aria-hidden="true">/</span>
-          <span aria-current="page">{{ page.subject.industry }}</span>
+          <span aria-current="page">{{ crumb }}</span>
         </nav>
         <p class="date serif small"><time :datetime="page.updatedAt">{{ dateOf(page.updatedAt) }}</time></p>
         <h1>{{ page.title }}</h1>
         <p class="standfirst serif">{{ copy.metaDescription }}</p>
         <p class="byline serif small">
-          Data <span class="file">{{ page.source.filename }}</span><br>
+          Words <NuxtLink to="/#about">{{ siteName }} research</NuxtLink><br>
           {{ readingTime }} min read
         </p>
       </header>
@@ -193,10 +208,10 @@ const confirmDelete = ref(false)
 
         <section class="prose panel method" aria-labelledby="method">
           <h2 id="method">Methodology</h2>
-          <p>This list was generated from <strong>{{ page.source.filename }}</strong> ({{ count(page.source.rows) }} rows). To be included, a company must:</p>
+          <p>This ranking is built from the dataset <strong>{{ page.source.filename }}</strong> ({{ count(page.source.rows) }} rows). To be included, a company must:</p>
           <ul>
-            <li>appear in the uploaded file with a company name</li>
-            <li v-if="page.data.has.amount">have a {{ metric.toLowerCase() }} figure, or be placed at the bottom if it has none</li>
+            <li>be listed in the dataset by name</li>
+            <li v-if="page.data.has.amount">have a figure for {{ metric.toLowerCase() }}; companies without one are placed at the bottom</li>
           </ul>
           <p>
             Companies are ranked by
@@ -250,7 +265,13 @@ const confirmDelete = ref(false)
           </div>
         </section>
 
-        <aside class="manage" aria-labelledby="manage">
+        <aside class="cta-block" aria-labelledby="cta">
+          <h2 id="cta">Turn your own data into a report like this</h2>
+          <p class="serif">Upload any CSV of companies. The columns are detected for you, every figure is calculated from the file, and the copy is checked before it is published.</p>
+          <NuxtLink to="/upload" class="button yellow">Generate a report</NuxtLink>
+        </aside>
+
+        <aside v-if="editToken" class="manage" aria-labelledby="manage">
           <h2 id="manage" class="small-heading">Manage this page</h2>
           <div class="actions">
             <button class="button secondary" :disabled="!!busy" @click="regenerate">
@@ -261,7 +282,7 @@ const confirmDelete = ref(false)
               <template v-else>
                 <span class="small">Delete this page for good?</span>
                 <button class="button danger" :disabled="!!busy" @click="remove">Yes, delete</button>
-                <button class="button secondary" @click="confirmDelete = false">Cancel</button>
+                <button class="button secondary" :disabled="!!busy" @click="confirmDelete = false">Cancel</button>
               </template>
             </template>
             <span v-else class="small muted">This example page can't be deleted.</span>
@@ -271,7 +292,7 @@ const confirmDelete = ref(false)
       </div>
     </div>
 
-    <section v-if="related.length" class="container latest" aria-labelledby="related">
+    <section v-if="related?.length" class="container latest" aria-labelledby="related">
       <h2 id="related">Latest reports</h2>
       <ul>
         <li v-for="r in related" :key="r.slug">
@@ -339,6 +360,8 @@ h2 { scroll-margin-top: 24px; }
 .faq h3 { margin-bottom: 6px; }
 
 .small-heading { font-size: var(--step-0); font-weight: 650; margin-bottom: 12px; }
+.cta-block { background: var(--night); color: rgba(255, 255, 255, 0.8); padding: 32px; display: grid; gap: 14px; justify-items: start; max-width: var(--measure); }
+.cta-block h2 { color: #fff; font-size: var(--step-1); }
 .manage { border-top: 1px solid var(--line); padding-top: 24px; }
 .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
 .manage [role='status'] { margin-top: 12px; }
