@@ -7,8 +7,12 @@ export default defineNuxtConfig({
   app: {
     head: {
       htmlAttrs: { lang: 'en-GB' },
-      link: [{ rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }],
-      meta: [{ name: 'theme-color', content: '#0d6b57' }]
+      link: [
+        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
+        // Fetch the heading font alongside the HTML: the cover number is the largest element on the page.
+        { rel: 'preload', href: '/fonts/public-sans-latin.woff2', as: 'font', type: 'font/woff2', crossorigin: '' }
+      ],
+      meta: [{ name: 'theme-color', content: '#111116' }]
     }
   },
 

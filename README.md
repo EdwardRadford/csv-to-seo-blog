@@ -56,10 +56,10 @@ flowchart LR
 | Cloudflare Workers (free plan) | Hosting. Server-renders every request, close to the visitor. |
 | Cloudflare KV | Stores generated pages. Accessed through Nitro storage, so local runs use files instead. |
 | Cloudflare rate limiting binding | 10 requests a minute per IP on the endpoints that cost money. |
-| Google Gemini API (free tier) | `gemini-3.5-flash` for copy and column hints; `gemini-flash-lite-latest` as the fallback. |
+| Google Gemini API (free tier) | Copy and column hints. Tries `gemini-3.5-flash`, then `gemini-3-flash-preview`, `gemini-3.1-flash-lite` and `gemini-flash-lite-latest`. |
 | Papa Parse | CSV parsing, including delimiter detection (comma, semicolon, tab). |
 | Vitest | Unit tests for parsing, detection, stats and the copy checker. |
-| Inter (via Fontsource) | Self-hosted font, so there are no third-party requests. |
+| Public Sans and Source Serif 4 | Self-hosted Latin subsets (from Fontsource, SIL Open Font License), so there are no third-party requests. |
 
 ## Run it locally
 
@@ -111,19 +111,38 @@ samples/         the real fintech CSV and four synthetic ones
 test/            unit tests and opt-in live tests
 ```
 
+## Design
+
+The pages follow the conventions of a published research report, modelled on how Beauhurst lays out its own ranking posts: a title block in a narrow left column, a cover illustration, a serif reading column, plain bulleted key findings with company names in bold, the methodology in a grey panel, and a wide, plain ranking table. On top of that this app adds:
+
+- a cover illustration drawn in code for each report, with the list size and that report's real funding curve;
+- a headline figures strip;
+- server-rendered charts (funding by rank, locations, categories, size, stage);
+- a sticky "On this page" contents list on wide screens.
+
+Lighthouse on the live fintech page (4 Nov 2026):
+
+| | Performance | Accessibility | Best practices | SEO |
+| --- | --- | --- | --- | --- |
+| Desktop | 100 | 100 | 100 | 100 |
+| Mobile (simulated slow 4G) | 85 to 95 across runs | 100 | 100 | 100 |
+
+Mobile performance is held back by page weight (the 100-row table, the JSON-LD and Nuxt's hydration data, about 32 KB compressed) and the web fonts. See Limitations.
+
 ## Key decisions
 
 - **Numbers in code, words from the AI.** LLMs are good at prose and bad at arithmetic. Keeping every figure out of the model's hands, then checking its output, means a page can't publish a number that isn't in the data.
 - **Rules before AI for column mapping.** Header and type rules are instant, free and predictable, and they handle every sample file. The AI is only asked about leftovers, and the user confirms the result, so one wrong guess can't spoil a page.
 - **A fixed title formula.** It keeps titles consistent and targeted, and stops the AI drifting into clickbait.
 - **KV over a database.** Each page is read whole, by its slug, so a key-value store fits. The trade-offs: KV is eventually consistent (a new page can take a few seconds to appear in other regions), and the page index is a single key rewritten on each save. That's fine for a demo, but not for thousands of pages (see Limitations).
-- **Template fallback.** The free Gemini tier sometimes returns 503 under load. The demo must never fail, so the same model is retried once after 1.5 seconds, then a second model is tried, then template copy is used. The methodology section says which one produced the copy.
+- **A chain of models, then a template.** The free Gemini tier returns 503 when busy and 429 when a model's daily allowance is used up (20 requests a day for `gemini-3.5-flash`). Each model has its own allowance, so the app tries four in turn: a busy model gets one retry after 1.5 seconds, and an exhausted one is skipped straight away. If all four fail, template copy built from the same figures is used. The demo can't fail, and the methodology section says which model wrote the copy, or that the template did.
 
 ## Limitations
 
 - The checker verifies numbers, not meaning. It can't catch a correct figure attached to the wrong claim. The prompt guards against that, but code doesn't.
 - The AI is never shown the full dataset, only the top 10 companies and the computed facts, so the copy can't say anything about the rest of the list beyond the stats.
 - The page index is one KV key, so two uploads at the same moment could race. A database (D1) or Durable Object would fix this at scale.
-- The free Gemini tier has rate limits. A soft daily cap (150 AI generations) protects the quota, and after that pages get template copy.
+- The free Gemini tier is small: about 20 requests a day per model. The model chain multiplies that, and a soft daily cap (150 generations) stops the public demo burning it. After that, pages get template copy.
+- Mobile performance could be improved by sending less hydration data (the table could hydrate from the JSON-LD, or sorting could happen on the server only), and by subsetting the fonts to the characters actually used.
 - Uploaded files aren't kept: only the cleaned data is stored. Values are always shown as text, and the app never exports CSV, so spreadsheet formula injection doesn't apply.
 - Anyone can upload and delete (except the protected example). A real deployment would put generation behind a login.
