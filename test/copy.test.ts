@@ -60,6 +60,12 @@ describe('copy checker', () => {
     expect(result.problems.join(' ')).toMatch(/45%/)
   })
 
+  it('rejects a company description pasted word for word', () => {
+    const copy = goodCopy()
+    copy.overview = ['Januus.io develops a cryptowallet-to-identity database which provides ownership data for cryptocurrency assets, wallets and transactions.']
+    expect(checkCopy(copy, facts, data).problems).toContain('copies the description of Januus.io word for word')
+  })
+
   it('rejects en and em dashes', () => {
     const copy = goodCopy()
     copy.intro = 'London leads — by a distance.'
