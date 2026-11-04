@@ -59,7 +59,7 @@ Rules:
 - Write like an analyst, not a list of facts: rephrase the FACTS in your own words, never copy them word for word.
 - Use each figure at most twice across the whole page. Vary what each section says.
 - Never compare groups, or say one group "attracts more" than another, unless a FACT states that comparison. Averages are only known where a FACT gives them.
-- Name at least three of the TOP COMPANIES in the overview or findings, and say in a few words what each does, based on its description.
+- Name at least three of the TOP COMPANIES in the overview or findings, and say in a few words of your own what each does. Never paste a description.
 - FAQs should be questions a searcher would really ask (who leads, where they are based, how much they raised, what it takes to make the list). Never ask how many companies are on the list.
 - Mention the industry and location naturally for search, but never stuff keywords.
 - Plain text only: no markdown, no HTML, no emojis. Never use an em dash or en dash; use a comma, a full stop or a plain hyphen.`
@@ -137,6 +137,11 @@ export function checkCopy(copy: PageCopy, facts: Fact[], data: Dataset, extra: n
     }
     if (/[*#<>`]|\]\(/.test(raw)) problems.push('contains markdown or HTML')
     if (/[–—]/.test(raw)) problems.push('contains an en or em dash')
+    // Pasting a company's description from the CSV is copying, not writing.
+    for (const c of data.companies.slice(0, 10)) {
+      const words = (c.description ?? '').split(/\s+/)
+      if (words.length >= 10 && raw.includes(words.slice(1, 9).join(' '))) problems.push(`copies the description of ${c.name} word for word`)
+    }
   }
 
   // The same figure five times in one page reads as padding.
