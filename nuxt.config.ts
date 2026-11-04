@@ -15,6 +15,10 @@ export default defineNuxtConfig({
   nitro: {
     // Cloudflare Workers (module syntax); bindings come from wrangler.jsonc.
     preset: 'cloudflare_module',
+    // Nitro rewrites `typeof window` to "undefined" when bundling for the server. Papa Parse has
+    // that phrase inside a string (its web-worker code), and the rewrite breaks the string.
+    // Turning the rewrite off is safe: on Workers, `typeof window` is "undefined" anyway.
+    replace: { 'typeof window': 'typeof window' },
     // Generated pages live in KV in production and in .data/pages when running locally.
     storage: {
       pages: { driver: 'cloudflare-kv-binding', binding: 'PAGES' }
