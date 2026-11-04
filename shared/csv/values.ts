@@ -60,7 +60,8 @@ export const isYear = (text: string) => /^(18|19|20)\d{2}$/.test(text.trim())
 export const isDate = (text: string) =>
   /^\d{4}-\d{2}(-\d{2})?$/.test(text.trim()) || /^\d{1,2}[/.]\d{1,2}[/.]\d{2,4}$/.test(text.trim())
 
-const URL_LIKE = /^(https?:\/\/)?(www\.)?[a-z0-9-]+(\.[a-z0-9-]+)+(:\d+)?(\/\S*)?$/i
+// The last label must contain letters ("co.uk", "ai"), so a number like "181.9" is never a URL.
+const URL_LIKE = /^(https?:\/\/)?(www\.)?[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z][a-z0-9-]*(:\d+)?(\/\S*)?$/i
 export const isUrl = (text: string) => URL_LIKE.test(text.trim())
 
 export function normaliseUrl(text: string): string | null {

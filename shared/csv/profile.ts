@@ -29,7 +29,21 @@ function mainCurrency(values: string[], header: string): Currency | undefined {
   const fromValues = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] as Currency | undefined
   if (fromValues) return fromValues
   const code = /\b(gbp|usd|eur)\b/i.exec(header)?.[1]
-  return code ? (code.toUpperCase() as Currency) : undefined
+  if (code) return code.toUpperCase() as Currency
+  const symbol = /[£$€]/.exec(header)?.[0]
+  return symbol ? ({ '£': 'GBP', '$': 'USD', '€': 'EUR' } as const)[symbol as '£' | '$' | '€'] : undefined
+}
+
+/**
+ * The unit a header puts on plain numbers: "Funding (£m)" means 12.5 is £12.5m.
+ * Values that carry their own unit ("£12.5m") are not multiplied again.
+ */
+export function headerMultiplier(header: string): number {
+  const h = header.toLowerCase()
+  if (/\(\s*[£$€]?\s*(bn|b)\s*\)|\bbillions?\b|[£$€]\s?bn\b/.test(h)) return 1e9
+  if (/\(\s*[£$€]?\s*(m|mn)\s*\)|\bmillions?\b|[£$€]\s?m\b/.test(h)) return 1e6
+  if (/\(\s*[£$€]?\s*(k|000s?)\s*\)|\bthousands?\b|\b000s\b/.test(h)) return 1e3
+  return 1
 }
 
 function columnType(values: string[]): ColumnType {

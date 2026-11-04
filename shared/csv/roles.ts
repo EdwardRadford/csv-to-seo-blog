@@ -33,7 +33,7 @@ export const RULES: Record<Role, RoleRule> = {
   },
   stage: {
     exact: /^(stage|funding stage|company stage|growth stage|phase)$/i,
-    partial: /stage|series|phase/i,
+    partial: /stage|series|phase|round|deal/i,
     types: ['category']
   },
   size: {
@@ -58,7 +58,7 @@ export const RULES: Record<Role, RoleRule> = {
   },
   founded: {
     exact: /^(founded|year founded|founded year|established|incorporated|year)$/i,
-    partial: /found|establish|incorporat/i,
+    partial: /found|establish|incorporat|\best\b|\bestd\b|\byear\b/i,
     types: ['year']
   }
 }

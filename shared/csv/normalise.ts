@@ -1,5 +1,6 @@
 import type { ColumnProfile, Company, Currency, Dataset, Mapping, ParsedCsv, Role } from '../types'
 import { ROLES } from '../types'
+import { headerMultiplier } from './profile'
 import { isMissing, isPlainNumber, isYear, normaliseUrl, parseBand, parseMoney, splitList, tidyLabel } from './values'
 
 /**
@@ -17,6 +18,7 @@ export function buildDataset(csv: ParsedCsv, profiles: ColumnProfile[], mapping:
     return isMissing(value) ? null : value
   }
   const tagSeparator = mapping.tags !== null ? profiles[mapping.tags]?.separator : undefined
+  const amountMultiplier = mapping.amount !== null ? headerMultiplier(csv.headers[mapping.amount] ?? '') : 1
 
   const seen = new Set<string>()
   let duplicates = 0
@@ -31,7 +33,9 @@ export function buildDataset(csv: ParsedCsv, profiles: ColumnProfile[], mapping:
     seen.add(key)
 
     const amountText = cell(row, 'amount')
-    const amount = amountText ? parseMoney(amountText)?.value ?? null : null
+    const money = amountText ? parseMoney(amountText) : null
+    // A plain "12.5" under "Funding (£m)" is £12.5m; "£12.5m" already says so itself.
+    const amount = money ? money.value * (money.marked && /[kmb]|million|billion|thousand/i.test(amountText!) ? 1 : amountMultiplier) : null
     if (mapping.amount !== null && amount === null) missingAmounts++
 
     const rankText = cell(row, 'rank')
