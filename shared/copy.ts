@@ -58,6 +58,7 @@ Rules:
 - Do not name any company that is not in the TOP COMPANIES list. Do not invent investors, products, events or trends.
 - Write like an analyst, not a list of facts: rephrase the FACTS in your own words, never copy them word for word.
 - Use each figure at most twice across the whole page. Vary what each section says.
+- Never compare groups, or say one group "attracts more" than another, unless a FACT states that comparison. Averages are only known where a FACT gives them.
 - Name at least three of the TOP COMPANIES in the overview or findings, and say in a few words what each does, based on its description.
 - FAQs should be questions a searcher would really ask (who leads, where they are based, how much they raised, what it takes to make the list). Never ask how many companies are on the list.
 - Mention the industry and location naturally for search, but never stuff keywords.
