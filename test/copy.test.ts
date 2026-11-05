@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { datasetFromCsv } from '#shared/csv'
-import { checkCopy, fallbackCopy, numbersIn, pageTitle, type PageCopy, type Subject } from '#shared/copy'
+import { buildPrompt, checkCopy, fallbackCopy, numbersIn, pageTitle, type PageCopy, type Subject } from '#shared/copy'
 import { computeStats, factsFrom } from '#shared/stats'
 
 const sample = (name: string) => readFileSync(new URL(`../samples/${name}`, import.meta.url), 'utf8')
@@ -97,5 +97,15 @@ describe('template copy and title', () => {
     expect(pageTitle(subject, 100)).toBe('Top 100 Seed-Stage Fintech Companies in the UK | 2026')
     expect(pageTitle({ ...subject, geography: 'Europe', qualifier: null, industry: 'cleantech' }, 80)).toBe('Top 80 Cleantech Companies in Europe | 2026')
     expect(pageTitle({ ...subject, qualifier: null, industry: 'ai' }, 30)).toBe('Top 30 AI Companies in the UK | 2026')
+  })
+})
+
+describe('prompt', () => {
+  it('gives the model tags, and flags companies it knows nothing about', () => {
+    const clean = datasetFromCsv(sample('cleantech-europe.csv'))
+    const p = buildPrompt(subject, facts, clean)
+    expect(p).toMatch(/tags: /)
+    const bare = { ...clean, companies: clean.companies.map((c) => ({ ...c, description: undefined, tags: [] })) }
+    expect(buildPrompt(subject, facts, bare)).toMatch(/\(no description\)/)
   })
 })

@@ -59,7 +59,9 @@ Rules:
 - Write like an analyst, not a list of facts: rephrase the FACTS in your own words, never copy them word for word.
 - Use each figure at most twice across the whole page. Vary what each section says.
 - Never compare groups, or say one group "attracts more" than another, unless a FACT states that comparison. Averages are only known where a FACT gives them.
-- Name at least three of the TOP COMPANIES in the overview or findings, and say in a few words of your own what each does. Never paste a description.
+- Name at least three of the TOP COMPANIES in the overview or findings. Say what a company does only from its description or tags in TOP COMPANIES, in a few words of your own; if it has neither, say nothing about what it does. Never paste a description.
+- A company can carry several tags, so never add tag counts together or call a set of tags a majority.
+- The list covers the companies in this dataset. Never claim they are the largest or best in the whole sector.
 - FAQs should be questions a searcher would really ask (who leads, where they are based, how much they raised, what it takes to make the list). Never ask how many companies are on the list.
 - Mention the industry and location naturally for search, but never stuff keywords.
 - Plain text only: no markdown, no HTML, no emojis. Never use an em dash or en dash; use a comma, a full stop or a plain hyphen.`
@@ -68,6 +70,8 @@ export function buildPrompt(subject: Subject, facts: Fact[], data: Dataset): str
   const top = data.companies.slice(0, 10).map((c) => {
     const parts = [`${c.rank}. ${c.name}`]
     if (c.description) parts.push(`- ${c.description.slice(0, 160)}`)
+    if (c.tags?.length) parts.push(`(tags: ${c.tags.slice(0, 4).join(', ')})`)
+    if (!c.description && !c.tags?.length) parts.push('(no description)')
     return parts.join(' ')
   })
   const scope = sentenceCase([subject.qualifier, subject.industry].filter(Boolean).join(' '))
